@@ -50,7 +50,7 @@ artifacts:
     
 on_success:
   - cd C:\dev
-  - git clone --depth 1 https://github.com/EspoTek/Labrador-win-builder
+  - git clone --depth 1 https://github.com/espotek-org/Labrador-win-builder
   - cd Labrador-win-builder
   - git config --global credential.helper store
   - ps: Add-Content "$HOME\.git-credentials" "https://$($env:access_token):x-oauth-basic@github.com`n"

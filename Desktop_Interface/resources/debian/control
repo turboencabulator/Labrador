@@ -9,4 +9,4 @@ Homepage: https://espotek.com
 Description: EspoTek Labrador
  This package is designed to install the EspoTek Labrador software on 64-bit Ubuntu 18.04 and later (including Kubuntu, Lubuntu etc.).
  .
- If you use another version of Linux, or are having issues with this package, I recommend either using the .AppImage, or installing through "make install" (see https://github.com/espotek/labrador for instructions on how to do this)
+ If you use another version of Linux, or are having issues with this package, I recommend either using the .AppImage, or installing through "make install" (see https://github.com/espotek-org/labrador for instructions on how to do this)

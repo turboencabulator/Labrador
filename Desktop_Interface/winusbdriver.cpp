@@ -469,7 +469,7 @@ void winUsbDriver::manualFirmwareRecovery(void){
         manualFirmwareMessages.exec();
         manualFirmwareMessages.setText("If it's still not working, please disconnect all USB devices from your machine, then one by one, insert Labrador into each USB port on your machine until it starts working.");
         manualFirmwareMessages.exec();
-        manualFirmwareMessages.setText("If that doesn't fix it, please open an issue on github.com/espotek/labrador, or contact me at admin@espotek.com.");
+        manualFirmwareMessages.setText("If that doesn't fix it, please open an issue on github.com/espotek-org/labrador, or contact me at admin@espotek.com.");
         manualFirmwareMessages.exec();
         return;
     } else {

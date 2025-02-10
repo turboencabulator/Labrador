@@ -7,7 +7,7 @@
 
 //o1buffer is an object that has o(1) access times for its elements.
 //At the moment it's basically an array, but I'm keeping it as an object so it can be changed to something more memory efficient later.
-//See isobuffer in github.com/espotek/labrador for an example of a much more compact (RAM-wise) buffer.
+//See isobuffer in github.com/espotek-org/labrador for an example of a much more compact (RAM-wise) buffer.
 o1buffer::o1buffer()
 {
     buffer = (int *) (malloc(sizeof(int)*NUM_SAMPLES_PER_CHANNEL));
