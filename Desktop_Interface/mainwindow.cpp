@@ -303,6 +303,7 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespLayout1Widget->setLayout(freqRespLayout1);
     freqRespMinXSpinbox->setMinimum(100);
     freqRespMinXSpinbox->setMaximum(62500);
+    freqRespMinXSpinbox->setValue(100);
     freqRespMaxXSpinbox->setMinimum(100);
     freqRespMaxXSpinbox->setMaximum(62500);
     freqRespMaxXSpinbox->setValue(32500);

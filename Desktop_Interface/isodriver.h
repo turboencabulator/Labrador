@@ -198,8 +198,8 @@ private:
     QVector<double> m_freqRespFreq;
     QVector<double> m_freqRespGain;
     QVector<double> m_freqRespPhase;
-    double m_freqRespMin = 0;
-    double m_freqRespMax = 62500;
+    double m_freqRespMin = 100;
+    double m_freqRespMax = 32500;
     int m_freqRespStep = 100;
     int m_freqRespType = 0;
     bool m_freqRespFlag = false;
