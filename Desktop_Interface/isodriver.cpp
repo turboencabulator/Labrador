@@ -950,8 +950,8 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
 
                     // Select new frequency
                     double freqValue = freqValue_CH1->value() + m_freqRespStep;
-                    if(freqValue >= m_freqRespMax || freqValue < m_freqRespMin || m_freqRespFreq.size() == 0)
-                        freqValue = m_freqRespMin + m_freqRespStep;
+                    if(freqValue > m_freqRespMax || freqValue < m_freqRespMin || m_freqRespFreq.size() == 0)
+                        freqValue = m_freqRespMin;
                     freqValue_CH1->setValue(freqValue);
 
                     // Reset iterators
