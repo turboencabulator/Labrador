@@ -312,9 +312,9 @@ private:
     // Frequency response
     QWidget* freqRespLayout1Widget = nullptr;
     QWidget* freqRespLayout2Widget = nullptr;
-    QSpinBox* freqRespMinXSpinbox = nullptr;
-    QSpinBox* freqRespMaxXSpinbox = nullptr;
-    QSpinBox* freqRespStepSpinbox = nullptr;
+    espoSpinBox* freqRespMinXSpinbox = nullptr;
+    espoSpinBox* freqRespMaxXSpinbox = nullptr;
+    espoSpinBox* freqRespStepSpinbox = nullptr;
     QComboBox* freqRespTypeComboBox = nullptr;
 
     //Duct Tape

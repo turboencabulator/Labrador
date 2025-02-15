@@ -289,21 +289,23 @@ MainWindow::MainWindow(QWidget *parent) :
     // Frequency response
     freqRespLayout1Widget = new QWidget();
     freqRespLayout2Widget = new QWidget();
-    freqRespMinXSpinbox   = new QSpinBox();
-    freqRespMaxXSpinbox   = new QSpinBox();
-    freqRespStepSpinbox   = new QSpinBox();
+    freqRespMinXSpinbox   = new espoSpinBox();
+    freqRespMaxXSpinbox   = new espoSpinBox();
+    freqRespStepSpinbox   = new espoSpinBox();
     freqRespTypeComboBox  = new QComboBox();
     QHBoxLayout* freqRespLayout1 = new QHBoxLayout(freqRespLayout1Widget);
     QHBoxLayout* freqRespLayout2 = new QHBoxLayout(freqRespLayout2Widget);
-    QLabel* freqRespMinFreqLabel = new QLabel("Min Frequency (Hz)");
-    QLabel* freqRespMaxFreqLabel = new QLabel("Max Frequency (Hz)");
-    QLabel* freqRespStepLabel = new QLabel("Step (Hz)");
+    QLabel* freqRespMinFreqLabel = new QLabel("Min Frequency");
+    QLabel* freqRespMaxFreqLabel = new QLabel("Max Frequency");
+    QLabel* freqRespStepLabel = new QLabel("Step");
     QLabel* freqRespTypeLabel = new QLabel("Response");
 
     freqRespLayout1Widget->setLayout(freqRespLayout1);
+    freqRespMinXSpinbox->setSuffix(QString::fromUtf8("Hz"));
     freqRespMinXSpinbox->setMinimum(100);
     freqRespMinXSpinbox->setMaximum(62500);
     freqRespMinXSpinbox->setValue(100);
+    freqRespMaxXSpinbox->setSuffix(QString::fromUtf8("Hz"));
     freqRespMaxXSpinbox->setMinimum(100);
     freqRespMaxXSpinbox->setMaximum(62500);
     freqRespMaxXSpinbox->setValue(32500);
@@ -317,6 +319,7 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespLayout1->addItem(spacer);
 
     freqRespLayout2Widget->setLayout(freqRespLayout2);
+    freqRespStepSpinbox->setSuffix(QString::fromUtf8("Hz"));
     freqRespStepSpinbox->setMinimum(10);
     freqRespStepSpinbox->setMaximum(10000);
     freqRespStepSpinbox->setValue(100);
@@ -332,13 +335,17 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespLayout2->addWidget(freqRespTypeComboBox);
     freqRespLayout2->addItem(spacer);
 
-    connect(freqRespMinXSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMinFreqResp);
-    connect(freqRespMaxXSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMaxFreqResp);
-    connect(freqRespStepSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), ui->controller_iso, &isoDriver::setFreqRespStep);
+    connect(freqRespMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMinFreqResp);
+    connect(freqRespMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMaxFreqResp);
+    connect(freqRespStepSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setFreqRespStep);
     connect(freqRespTypeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), ui->controller_iso, &isoDriver::setFreqRespType);
 
-    connect(freqRespMinXSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), freqRespMaxXSpinbox, &QSpinBox::setMinimum);
-    connect(freqRespMaxXSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), freqRespMinXSpinbox, &QSpinBox::setMaximum);
+    connect(freqRespMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), freqRespMaxXSpinbox, &espoSpinBox::setMinimum);
+    connect(freqRespMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), freqRespMinXSpinbox, &espoSpinBox::setMaximum);
+
+    connect(freqRespMinXSpinbox, SIGNAL(valueChanged(double)), freqRespMinXSpinbox, SLOT(changeStepping(double)));
+    connect(freqRespMaxXSpinbox, SIGNAL(valueChanged(double)), freqRespMaxXSpinbox, SLOT(changeStepping(double)));
+    connect(freqRespStepSpinbox, SIGNAL(valueChanged(double)), freqRespStepSpinbox, SLOT(changeStepping(double)));
 
     ui->verticalLayout->addWidget(freqRespLayout1Widget);
     ui->verticalLayout->addWidget(freqRespLayout2Widget);
