@@ -2638,6 +2638,7 @@ void MainWindow::on_actionFrequency_Spectrum_triggered(bool checked)
         freqRespLayout2Widget->setVisible(false);
         ui->actionFrequency_Response->setChecked(false);
     }
+    ui->scopeGroup_CH2->setDisabled(false);
 
     if (checked == true)
         MAX_WINDOW_SIZE = 1<<17;
