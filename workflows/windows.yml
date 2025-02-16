@@ -1,0 +1,78 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - QT_PATH: 'C:\Qt\5.12\msvc2017_64\bin'
+            PLATFORM: 'amd64'
+            PLATFORM_ALT_NAME: 'x64'
+            OUTPUT_BIN_DIR: 'bin64'
+          - QT_PATH: 'C:\Qt\5.12\msvc2017\bin'
+            PLATFORM: 'x86'
+            PLATFORM_ALT_NAME: 'x86'
+            OUTPUT_BIN_DIR: 'bin32'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Mimic the AppVeyor "clone_folder" setting by moving the repo to C:\dev\labrador
+      - name: Move repository to C:\dev\labrador
+        shell: cmd
+        run: |
+          mkdir C:\dev\labrador
+          xcopy /s /e /i /y "%GITHUB_WORKSPACE%\*" C:\dev\labrador\
+
+      - name: Setup Visual Studio environment and build
+        shell: cmd
+        run: |
+          cd C:\dev\labrador
+          REM Prepend the Qt path to PATH
+          set "PATH=${{ matrix.QT_PATH }};%PATH%"
+          REM Initialize the Visual Studio build environment
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.PLATFORM }}
+          cd Desktop_Interface
+          REM Get short git hash
+          for /f "delims=" %%i in ('git rev-parse --short HEAD') do set GIT_HASH_SHORT=%%i
+          qmake CONFIG+=release DEFINES+=GIT_HASH_SHORT=%GIT_HASH_SHORT%
+          nmake
+
+      - name: Post-build steps
+        shell: cmd
+        run: |
+          cd C:\dev\labrador\Desktop_Interface
+          windeployqt bin\Labrador.exe
+          xcopy /i /s /y "build_win\fftw\${{ matrix.PLATFORM_ALT_NAME }}"\\libfftw3-3.dll bin
+          del bin\vcredist*.exe
+          del bin\*.pdb
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: Labrador_${{ matrix.PLATFORM }}
+          path: C:\dev\labrador\Desktop_Interface\bin
+
+      - name: Publish update to Labrador-win-builder
+        if: success()
+        shell: pwsh
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          OUTPUT_BIN_DIR: ${{ matrix.OUTPUT_BIN_DIR }}
+        run: |
+          cd C:\dev
+          git clone --depth 1 https://github.com/espotek-org/Labrador-win-builder
+          cd Labrador-win-builder
+          git config --global credential.helper store
+          Add-Content "$env:USERPROFILE\.git-credentials" "https://$env:ACCESS_TOKEN:x-oauth-basic@github.com`n"
+          git config --global user.email "admin@espotek.com"
+          git config --global user.name "Chris Esposito"
+          git checkout master
+          xcopy /i /s /y C:\dev\labrador\Desktop_Interface\bin $env:OUTPUT_BIN_DIR
+          git add $env:OUTPUT_BIN_DIR
+          git commit -a -m "Automatic update from main Labrador repository"
+          git push

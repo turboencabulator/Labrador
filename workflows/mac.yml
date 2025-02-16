@@ -1,0 +1,39 @@
+name: Build macOS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Homebrew dependencies
+        run: |
+          brew update
+          brew remove --force $(brew list --formula) || true
+          brew install fftw libomp qt5 libusb wget
+          brew link qt5 --force
+
+      - name: Build macOS app
+        run: |
+          cd Desktop_Interface
+          GIT_HASH_SHORT=$(git rev-parse --short HEAD)
+          qmake CONFIG+=release PREFIX=/usr DEFINES+=GIT_HASH_SHORT=$GIT_HASH_SHORT
+          make -j$(sysctl -n hw.ncpu)
+          mkdir -p bin/Labrador.app/Contents/MacOS/Resources
+          mkdir -p bin/Labrador.app/Contents/Frameworks
+          cp -r bin/firmware bin/Labrador.app/Contents/MacOS
+          cp -r bin/waveforms bin/Labrador.app/Contents/MacOS
+          cp resources/iconfile.icns bin/Labrador.app/Contents/Resources
+          cp resources/Info.plist bin/Labrador.app/Contents
+          macdeployqt bin/Labrador.app -dmg -libpath=build_mac/libdfuprog/lib/
+
+      - name: Run uploadtool for macOS
+        run: |
+          export UPLOADTOOL_SUFFIX="macOS"
+          export UPLOADTOOL_BODY="EspoTek Labrador software for macOS 10.13 and later. If you are running an older version of macOS, please use the macOS Legacy build below."
+          wget -c https://github.com/probonopd/uploadtool/raw/master/upload.sh
+          bash upload.sh bin/Labrador.dmg
