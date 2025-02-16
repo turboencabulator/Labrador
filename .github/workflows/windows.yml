@@ -19,7 +19,7 @@ jobs:
             OUTPUT_BIN_DIR: 'bin32'
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       # Mimic the AppVeyor "clone_folder" setting by moving the repo to C:\dev\labrador
       - name: Move repository to C:\dev\labrador
@@ -52,7 +52,7 @@ jobs:
           del bin\*.pdb
 
       - name: Upload Windows artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Labrador_${{ matrix.PLATFORM }}
           path: C:\dev\labrador\Desktop_Interface\bin
