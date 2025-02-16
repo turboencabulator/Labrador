@@ -1855,3 +1855,8 @@ void isoDriver::setFreqRespType(int freqRespType)
     m_freqRespType = freqRespType;
 }
 
+void isoDriver::restartFreqResp()
+{
+    m_freqRespFlag = true;
+}
+

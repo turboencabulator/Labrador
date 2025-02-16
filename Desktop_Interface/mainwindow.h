@@ -316,6 +316,7 @@ private:
     espoSpinBox* freqRespMaxXSpinbox = nullptr;
     espoSpinBox* freqRespStepSpinbox = nullptr;
     QComboBox* freqRespTypeComboBox = nullptr;
+    QPushButton *freqRespRestartButton = nullptr;
 
     //Duct Tape
     bool dt_AlreadyAskedAboutCalibration = false;

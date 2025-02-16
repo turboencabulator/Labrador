@@ -293,6 +293,7 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespMaxXSpinbox   = new espoSpinBox();
     freqRespStepSpinbox   = new espoSpinBox();
     freqRespTypeComboBox  = new QComboBox();
+    freqRespRestartButton = new QPushButton("Restart");
     QHBoxLayout* freqRespLayout1 = new QHBoxLayout(freqRespLayout1Widget);
     QHBoxLayout* freqRespLayout2 = new QHBoxLayout(freqRespLayout2Widget);
     QLabel* freqRespMinFreqLabel = new QLabel("Min Frequency");
@@ -328,17 +329,21 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespTypeComboBox->setCurrentIndex(0);
 
     freqRespLayout2->addItem(spacer);
+    freqRespLayout2->addItem(spacer);
     freqRespLayout2->addWidget(freqRespStepLabel);
     freqRespLayout2->addWidget(freqRespStepSpinbox);
     freqRespLayout2->addItem(spacer);
     freqRespLayout2->addWidget(freqRespTypeLabel);
     freqRespLayout2->addWidget(freqRespTypeComboBox);
     freqRespLayout2->addItem(spacer);
+    freqRespLayout2->addWidget(freqRespRestartButton);
+    freqRespLayout2->addItem(spacer);
 
     connect(freqRespMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMinFreqResp);
     connect(freqRespMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMaxFreqResp);
     connect(freqRespStepSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setFreqRespStep);
     connect(freqRespTypeComboBox, QOverload<int>::of(&QComboBox::currentIndexChanged), ui->controller_iso, &isoDriver::setFreqRespType);
+    connect(freqRespRestartButton, &QPushButton::clicked, ui->controller_iso, &isoDriver::restartFreqResp);
 
     connect(freqRespMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), freqRespMaxXSpinbox, &espoSpinBox::setMinimum);
     connect(freqRespMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), freqRespMinXSpinbox, &espoSpinBox::setMaximum);
@@ -346,6 +351,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(freqRespMinXSpinbox, SIGNAL(valueChanged(double)), freqRespMinXSpinbox, SLOT(changeStepping(double)));
     connect(freqRespMaxXSpinbox, SIGNAL(valueChanged(double)), freqRespMaxXSpinbox, SLOT(changeStepping(double)));
     connect(freqRespStepSpinbox, SIGNAL(valueChanged(double)), freqRespStepSpinbox, SLOT(changeStepping(double)));
+
 
     ui->verticalLayout->addWidget(freqRespLayout1Widget);
     ui->verticalLayout->addWidget(freqRespLayout2Widget);

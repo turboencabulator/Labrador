@@ -306,6 +306,7 @@ public slots:
     void setMaxFreqResp(int maxFreqResp);
     void setFreqRespStep(int stepFreqResp);
     void setFreqRespType(int typeFreqResp);
+    void restartFreqResp();
 };
 
 #endif // ISODRIVER_H
