@@ -9,17 +9,26 @@ jobs:
     strategy:
       matrix:
         include:
-          - QT_PATH: 'C:\Qt\5.12\msvc2017_64\bin'
+          - QT_ARCH: 'win64_msvc2017_64'
             PLATFORM: 'amd64'
             PLATFORM_ALT_NAME: 'x64'
             OUTPUT_BIN_DIR: 'bin64'
-          - QT_PATH: 'C:\Qt\5.12\msvc2017\bin'
+          - QT_ARCH: 'win32_msvc2017'
             PLATFORM: 'x86'
             PLATFORM_ALT_NAME: 'x86'
             OUTPUT_BIN_DIR: 'bin32'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Install Qt (64-bit & 32-bit)
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: '==3.1.*'
+          version: '5.12.12'
+          host: 'windows'
+          target: 'desktop'
+          arch: '${{ matrix.QT_ARCH }}'
 
       # Mimic the AppVeyor "clone_folder" setting by moving the repo to C:\dev\labrador
       - name: Move repository to C:\dev\labrador
@@ -33,7 +42,7 @@ jobs:
         run: |
           cd C:\dev\labrador
           REM Prepend the Qt path to PATH
-          set "PATH=${{ matrix.QT_PATH }};%PATH%"
+          set "PATH=C:\Qt\5.12.12\${{ matrix.QT_ARCH }}\bin;%PATH%"
           REM Initialize the Visual Studio build environment
           call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.PLATFORM }}
           cd Desktop_Interface
@@ -47,7 +56,7 @@ jobs:
         run: |
           cd C:\dev\labrador\Desktop_Interface
           windeployqt bin\Labrador.exe
-          xcopy /i /s /y "build_win\fftw\${{ matrix.PLATFORM_ALT_NAME }}"\\libfftw3-3.dll bin
+          xcopy /i /s /y "build_win\fftw\${{ matrix.PLATFORM_ALT_NAME }}"\libfftw3-3.dll bin
           del bin\vcredist*.exe
           del bin\*.pdb
 
