@@ -42,12 +42,14 @@ if [ -n "$cxxpath" ] || [ -n "$gccpath" ]; then
 fi
 
 if [ ! -f "/etc/udev/rules.d/69-labrador.rules" ] \
-&& [ -f "$HERE/etc/udev/rules.d/69-labrador.rules" ]; then
+&& [ ! -f "/run/udev/rules.d/69-labrador.rules" ] \
+&& [ ! -f "/lib/udev/rules.d/69-labrador.rules" ] \
+&& [ -f "$HERE/lib/udev/rules.d/69-labrador.rules" ]; then
   cat > /tmp/roothelper <<EOoF
 #!/bin/bash
 set -e
-cat > /etc/udev/rules.d/69-labrador.rules <<\EOF
-$(<"$HERE/etc/udev/rules.d/69-labrador.rules")
+cat > /run/udev/rules.d/69-labrador.rules <<\EOF
+$(<"$HERE/lib/udev/rules.d/69-labrador.rules")
 EOF
 udevadm trigger
 EOoF
