@@ -51,7 +51,7 @@ set -e
 cat > /run/udev/rules.d/69-labrador.rules <<\EOF
 $(<"$HERE/lib/udev/rules.d/69-labrador.rules")
 EOF
-udevadm trigger
+udevadm control --reload-rules && udevadm trigger --subsystem-match=usb
 EOoF
   chmod a+x /tmp/roothelper
 

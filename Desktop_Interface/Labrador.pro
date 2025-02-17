@@ -192,7 +192,7 @@ unix:!android:!macx{
 
     udevextra.path = /lib/udev/rules.d
     !equals(DEB, 1){
-        udevextra.extra = udevadm control --reload-rules && udevadm trigger
+        udevextra.extra = udevadm control --reload-rules && udevadm trigger --subsystem-match=usb
     }
 
     equals(APPIMAGE, 1){
