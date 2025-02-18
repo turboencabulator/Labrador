@@ -338,6 +338,7 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespLayout2->addItem(spacer);
     freqRespLayout2->addWidget(freqRespRestartButton);
     freqRespLayout2->addItem(spacer);
+    freqRespLayout2->addItem(spacer);
 
     connect(freqRespMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMinFreqResp);
     connect(freqRespMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMaxFreqResp);
@@ -2644,6 +2645,11 @@ void MainWindow::on_actionFrequency_Spectrum_triggered(bool checked)
 {
     ui->controller_iso->spectrum = checked;
     spectrumLayoutWidget->setVisible(checked);
+    if(ui->controller_iso->freqResp)
+    {
+        ui->scopeGroup_CH1->setCheckable(true);
+        ui->scopeGroup_CH2->setCheckable(true);
+    }
     if(checked)
     {
         ui->controller_iso->freqResp = false;
@@ -2669,8 +2675,11 @@ void MainWindow::on_actionFrequency_Response_triggered(bool checked)
         ui->controller_iso->spectrum = false;
         spectrumLayoutWidget->setVisible(false);
         ui->actionFrequency_Spectrum->setChecked(false);
+        ui->scopeGroup_CH1->setChecked(true);
         ui->scopeGroup_CH2->setChecked(true);
     }
+    ui->scopeGroup_CH1->setCheckable(!checked);
+    ui->scopeGroup_CH2->setCheckable(!checked);
     ui->scopeGroup_CH2->setDisabled(checked);
 }
 
