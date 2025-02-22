@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-linux:
+  build:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -21,13 +21,36 @@ jobs:
         run: |
           ./make_appimage
 
-      - name: Run uploadtool for Linux
-        if: github.ref == 'refs/heads/master'
-        working-directory: ./Desktop_Interface
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: Desktop_Interface/EspoTek_Labrador*.AppImage
+          compression-level: 0
+          if-no-files-found: error
+
+  release:
+    permissions:
+      contents: write
+    needs:
+      - build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: List artifacts
+        run: |
+          ls -alR
+
+      - name: Run uploadtool
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPLOADTOOL_ISPRERELEASE: 'true'
           UPLOADTOOL_SUFFIX: 'Linux'
-          UPLOADTOOL_BODY: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the wiki for build instructions. https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux"
+          UPLOADTOOL_BODY: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux)."
         run: |
           wget -N https://github.com/probonopd/uploadtool/raw/master/upload.sh
           bash upload.sh EspoTek_Labrador*.AppImage

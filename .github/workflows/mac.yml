@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-macos:
+  build:
     runs-on: macos-latest
     steps:
       - name: Checkout repository
@@ -31,13 +31,36 @@ jobs:
           cp resources/Info.plist bin/Labrador.app/Contents
           macdeployqt bin/Labrador.app -dmg -libpath=build_mac/libdfuprog/lib/
 
-      - name: Run uploadtool for macOS
-        if: github.ref == 'refs/heads/master'
-        working-directory: ./Desktop_Interface
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          path: Desktop_Interface/bin/Labrador.dmg
+          compression-level: 0
+          if-no-files-found: error
+
+  release:
+    permissions:
+      contents: write
+    needs:
+      - build
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: List artifacts
+        run: |
+          ls -alR
+
+      - name: Run uploadtool
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          UPLOADTOOL_ISPRERELEASE: 'true'
           UPLOADTOOL_SUFFIX: 'macOS'
           UPLOADTOOL_BODY: "EspoTek Labrador software for macOS 10.13 and later. If you are running an older version of macOS, please use the macOS Legacy build below."
         run: |
           wget -N https://github.com/probonopd/uploadtool/raw/master/upload.sh
-          bash upload.sh bin/Labrador.dmg
+          bash upload.sh Labrador.dmg
