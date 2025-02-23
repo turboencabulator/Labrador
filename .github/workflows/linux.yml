@@ -19,7 +19,8 @@ jobs:
       - name: Build AppImage
         working-directory: ./Desktop_Interface
         run: |
-          ./make_appimage
+          #./make_appimage
+          echo "this is a test" > EspoTek_Labrador-test.not.an.AppImage
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -33,7 +34,7 @@ jobs:
       contents: write
     needs:
       - build
-    if: github.ref == 'refs/heads/master'
+    #if: github.ref == 'refs/heads/master'
     uses: ./.github/workflows/continuous.yml
     with:
       tag: 'continuous-Linux'
