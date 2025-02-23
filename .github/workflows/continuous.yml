@@ -45,14 +45,14 @@ jobs:
 
           if [ "$tag_err" -eq 0 ]; then
             # Delete tag (will be recreated on correct commit)
-            echo "deleting existing tag: $tag"
+            echo "deleting existing tag:"; echo "$tag" | jq '.'
             ep="/repos/{owner}/{repo}/git/refs/tags/$RELEASE_TAG"
             gh api -X DELETE "$ep"
           fi
 
           if [ "$release_err" -eq 0 ]; then
             # Delete assets from existing release
-            echo "deleting assets from existing release: $release"
+            echo "deleting assets from existing release:"; echo $release" | jq '.'
             ep="/repos/{owner}/{repo}/releases/assets"
             for asset_id in $(echo "$release" | jq -r '.assets[].id'); do
               gh api -X DELETE "$ep/$asset_id"
@@ -77,7 +77,7 @@ jobs:
             -f "body=$RELEASE_BODY" \
             -F "draft=true" \
             -F "prerelease=true")
-          echo "current release: $release"
+          echo "current release:"; echo $release" | jq '.'
 
           # Upload assets
           url=$(echo "$release" | jq -r '.upload_url' | cut -d '{' -f 1)
@@ -93,4 +93,5 @@ jobs:
           # Publish release, will create tag
           release_id=$(echo "$release" | jq -r '.id')
           ep="/repos/{owner}/{repo}/releases/$release_id"
-          gh api -X PATCH "$ep" -F "draft=false"
+          release=$(gh api -X PATCH "$ep" -F "draft=false")
+          echo "published release:"; echo $release" | jq '.'
