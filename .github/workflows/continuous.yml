@@ -80,11 +80,14 @@ jobs:
           echo "current release:"; echo "$release" | jq '.'
 
           # Upload assets
-          release_id=$(echo "$release" | jq -r '.id')
-          ep="/repos/{owner}/{repo}/releases/$release_id"
+          url=$(echo "$release" | jq -r '.upload_url' | cut -d '{' -f 1)
           for asset in $(find . -type f); do
             echo "uploading $asset"
-            gh api -X POST "$ep/assets?name=$(basename $asset | jq -Rr @uri)" -F "@$asset"
+            curl -L -X POST \
+              -H "Authorization: Bearer $GITHUB_TOKEN" \
+              -H "Content-Type: application/octet-stream" \
+              --data-binary "@$asset" \
+              "$url?name=$(basename $asset | jq -Rr @uri)"
           done
 
           # Publish release, will create tag
