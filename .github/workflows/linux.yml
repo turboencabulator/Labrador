@@ -34,23 +34,8 @@ jobs:
     needs:
       - build
     if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-
-      - name: List artifacts
-        run: |
-          ls -alR
-
-      - name: Run uploadtool
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPLOADTOOL_ISPRERELEASE: 'true'
-          UPLOADTOOL_SUFFIX: 'Linux'
-          UPLOADTOOL_BODY: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux)."
-        run: |
-          wget -N https://github.com/probonopd/uploadtool/raw/master/upload.sh
-          bash upload.sh EspoTek_Labrador*.AppImage
+    uses: ./.github/workflows/continuous.yml
+    with:
+      tag: 'continuous-Linux'
+      name: "Continuous build (Linux)"
+      body: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux)."
