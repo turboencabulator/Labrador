@@ -30,19 +30,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GH_REPO: ${{ github.repository }}
+          RELEASE_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_NAME: ${{ inputs.name }}
+          RELEASE_BODY: ${{ inputs.body }}
         run: |
           # Check for existing tag
-          ep="/repos/{owner}/{repo}/git/ref/tags/${{ inputs.tag }}"
+          ep="/repos/{owner}/{repo}/git/ref/tags/$RELEASE_TAG"
           tag_err=0; tag=$(gh api "$ep") || tag_err=$?
 
           # Check for existing release
-          ep="/repos/{owner}/{repo}/releases/tags/${{ inputs.tag }}"
+          ep="/repos/{owner}/{repo}/releases/tags/$RELEASE_TAG"
           release_err=0; release=$(gh api "$ep") || release_err=$?
 
           if [ "$tag_err" -eq 0 ]; then
             # Delete tag (will be recreated on correct commit)
             echo "deleting existing tag:"; echo "$tag" | jq '.'
-            ep="/repos/{owner}/{repo}/git/refs/tags/${{ inputs.tag }}"
+            ep="/repos/{owner}/{repo}/git/refs/tags/$RELEASE_TAG"
             gh api -X DELETE "$ep"
           fi
 
@@ -67,10 +71,10 @@ jobs:
 
           # Create or update release
           release=$(gh api -X "$method" "$ep" \
-            -f "tag_name=${{ inputs.tag }}" \
-            -f "target_commitish=${{ github.sha }}" \
-            -f "name=${{ inputs.name }}" \
-            -f "body=${{ inputs.body }}" \
+            -f "tag_name=$RELEASE_TAG" \
+            -f "target_commitish=$RELEASE_SHA" \
+            -f "name=$RELEASE_NAME" \
+            -f "body=$RELEASE_BODY" \
             -F "draft=true" \
             -F "prerelease=true")
           echo "current release:"; echo "$release" | jq '.'
