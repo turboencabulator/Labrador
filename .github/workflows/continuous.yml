@@ -49,13 +49,13 @@ jobs:
             release_err=0; release=$(gh api "$ep" | jq -e "[.[] | select(.tag_name == \"$RELEASE_TAG\")].[0]") || release_err=$?
           fi
 
-          if [ "$tag_err" -eq 0 ]; then
-            # Delete tag (will be recreated on correct commit)
-            # Deleting changes the corresponding release to a draft
-            echo "deleting existing tag:"; echo "$tag" | jq '.'
-            ep="/repos/{owner}/{repo}/git/refs/tags/$RELEASE_TAG"
-            gh api -X DELETE "$ep"
-          fi
+          #if [ "$tag_err" -eq 0 ]; then
+          #  # Delete tag (will be recreated on correct commit)
+          #  # Deleting changes the corresponding release to a draft
+          #  echo "deleting existing tag:"; echo "$tag" | jq '.'
+          #  ep="/repos/{owner}/{repo}/git/refs/tags/$RELEASE_TAG"
+          #  gh api -X DELETE "$ep"
+          #fi
 
           if [ "$release_err" -eq 0 ]; then
             # Delete assets from existing release
@@ -82,7 +82,7 @@ jobs:
             -f "target_commitish=$RELEASE_SHA" \
             -f "name=$RELEASE_NAME" \
             -f "body=$RELEASE_BODY" \
-            -F "draft=true" \
+            -F "draft=false" \
             -F "prerelease=true")
           echo "current release:"; echo "$release" | jq '.'
 
@@ -99,8 +99,8 @@ jobs:
             [ "$asset_err" -eq 0 ] || exit "$asset_err"
           done
 
-          # Publish release, will create tag
-          release_id=$(echo "$release" | jq -r '.id')
-          ep="/repos/{owner}/{repo}/releases/$release_id"
-          release=$(gh api -X PATCH "$ep" -F "draft=false")
-          echo "published release:"; echo "$release" | jq '.'
+          ## Publish release, will create tag
+          #release_id=$(echo "$release" | jq -r '.id')
+          #ep="/repos/{owner}/{repo}/releases/$release_id"
+          #release=$(gh api -X PATCH "$ep" -F "draft=false")
+          #echo "published release:"; echo "$release" | jq '.'
