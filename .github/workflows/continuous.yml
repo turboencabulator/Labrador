@@ -43,8 +43,15 @@ jobs:
           ep="/repos/{owner}/{repo}/releases/tags/$RELEASE_TAG"
           release_err=0; release=$(gh api "$ep") || release_err=$?
 
+          if [ "$release_err" -ne 0 ]; then
+            # Check for existing draft release
+            ep="/repos/{owner}/{repo}/releases"
+            release=$(gh api "$ep" | jq -e ".[] | select(.tag_name == \"$RELEASE_TAG\")") || release_err=$?
+          fi
+
           if [ "$tag_err" -eq 0 ]; then
             # Delete tag (will be recreated on correct commit)
+            # Deleting changes the corresponding release to a draft
             echo "deleting existing tag:"; echo "$tag" | jq '.'
             ep="/repos/{owner}/{repo}/git/refs/tags/$RELEASE_TAG"
             gh api -X DELETE "$ep"
