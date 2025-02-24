@@ -44,9 +44,9 @@ jobs:
           release_err=0; release=$(gh api "$ep") || release_err=$?
 
           if [ "$release_err" -ne 0 ]; then
-            # Check for existing draft release
+            # Check for existing draft release, preferring the first one found
             ep="/repos/{owner}/{repo}/releases"
-            release=$(gh api "$ep" | jq -e ".[] | select(.tag_name == \"$RELEASE_TAG\")") || release_err=$?
+            release_err=0; release=$(gh api "$ep" | jq -e "[.[] | select(.tag_name == \"$RELEASE_TAG\")].[0]") || release_err=$?
           fi
 
           if [ "$tag_err" -eq 0 ]; then
