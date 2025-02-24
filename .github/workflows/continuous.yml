@@ -87,7 +87,7 @@ jobs:
               -H "Authorization: Bearer $GITHUB_TOKEN" \
               -H "Content-Type: application/octet-stream" \
               --data-binary "@$file" \
-              "$url") || asset_err=$?
+              "$url?name=$(basename $file | jq -Rr @uri)") || asset_err=$?
             echo "uploaded asset:"; echo "$asset" | jq '.'
             [ "$asset_err" -eq 0 ] || exit "$asset_err"
           done
