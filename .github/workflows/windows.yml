@@ -21,7 +21,25 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Install Qt (64-bit & 32-bit)
+      # 1) Install Chocolatey (if not already present)
+      - name: Install Chocolatey
+        if: ${{ runner.os == 'Windows' }}
+        shell: powershell
+        run: |
+          Set-ExecutionPolicy Bypass -Scope Process -Force
+          [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+          iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+
+      # 2) Install Visual Studio 2017 Build Tools + vswhere
+      #    This package includes the C++ toolset 14.16, needed by Qt 5.12 for MSVC2017.
+      - name: Install Visual Studio 2017 Build Tools
+        shell: powershell
+        run: |
+          choco install visualstudio2017buildtools --version=15.9.54.0 `
+            --package-parameters "--allWorkloads --includeRecommended --includeOptional" -y
+          choco install vswhere -y
+
+      # 3) Install Qt (5.12.12) for the desired MSVC2017 architecture
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -31,21 +49,21 @@ jobs:
           target: 'desktop'
           arch: '${{ matrix.QT_ARCH }}'
 
-      # Mimic the AppVeyor "clone_folder" setting by moving the repo to C:\dev\labrador
+      # 4) Move repository content to C:\dev\labrador (like AppVeyor clone_folder)
       - name: Move repository to C:\dev\labrador
         shell: cmd
         run: |
           mkdir C:\dev\labrador
           xcopy /s /e /i /y "%GITHUB_WORKSPACE%\*" C:\dev\labrador\
 
-      # Setup MSVC Developer Command Prompt
+      # 5) Activate the newly installed MSVC 2017 environment with toolset 14.16
       - name: Setup MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.PLATFORM }}
-          toolset: 14.16  # This corresponds to Visual Studio 2017
+          toolset: 14.16
 
-      # Debug step to check environment
+      # 6) Debug step: Confirm cl, nmake, qmake are found
       - name: Debug environment
         shell: cmd
         run: |
@@ -54,7 +72,7 @@ jobs:
           where nmake
           where qmake
 
-      # Build step
+      # 7) Build Labrador
       - name: Build Labrador
         shell: cmd
         run: |
@@ -63,6 +81,7 @@ jobs:
           qmake CONFIG+=release DEFINES+=GIT_HASH_SHORT=%GIT_HASH_SHORT%
           nmake
 
+      # 8) Post-build steps: windeployqt, copy fftw DLL, etc.
       - name: Post-build steps
         shell: cmd
         run: |
@@ -72,12 +91,14 @@ jobs:
           del bin\vcredist*.exe
           del bin\*.pdb
 
+      # 9) Upload artifact
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: Labrador_${{ matrix.PLATFORM }}
           path: C:\dev\labrador\Desktop_Interface\bin
 
+      # 10) Optional: Push result to Labrador-win-builder
       - name: Publish update to Labrador-win-builder
         if: success()
         shell: pwsh
