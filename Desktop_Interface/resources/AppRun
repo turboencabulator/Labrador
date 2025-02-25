@@ -41,24 +41,27 @@ if [ -n "$cxxpath" ] || [ -n "$gccpath" ]; then
   export LD_LIBRARY_PATH="${cxxpath}${gccpath}${LD_LIBRARY_PATH}"
 fi
 
-if [ ! -f "/etc/udev/rules.d/69-labrador.rules" ] \
-&& [ ! -f "/run/udev/rules.d/69-labrador.rules" ] \
-&& [ ! -f "/lib/udev/rules.d/69-labrador.rules" ] \
-&& [ -f "$HERE/lib/udev/rules.d/69-labrador.rules" ]; then
-  cat > /tmp/roothelper <<EOoF
-#!/bin/bash
+HELPER=$(mktemp "/tmp/labrador-udev-helperXXXXXX")
+RULES="69-labrador.rules"
+if [ ! -f "/etc/udev/rules.d/$RULES" ] \
+&& [ ! -f "/run/udev/rules.d/$RULES" ] \
+&& [ ! -f "/lib/udev/rules.d/$RULES" ] \
+&& [ -f "$HERE/lib/udev/rules.d/$RULES" ]; then
+  cat > "$HELPER" <<EOHelper
+#!/bin/sh
 set -e
-cat > /run/udev/rules.d/69-labrador.rules <<\EOF
-$(<"$HERE/lib/udev/rules.d/69-labrador.rules")
-EOF
+cat > /run/udev/rules.d/$RULES <<\EORules
+$(<"$HERE/lib/udev/rules.d/$RULES")
+EORules
 udevadm control --reload-rules && udevadm trigger --subsystem-match=usb
-EOoF
-  chmod a+x /tmp/roothelper
+EOHelper
+  chmod u+x "$HELPER"
 
-  sudo true && sudo /tmp/roothelper
-  sudo true || pkexec --disable-internal-agent /tmp/roothelper || true
+  echo "Installing udev rules to /run/udev/rules.d/$RULES"
+  sudo true && sudo "$HELPER"
+  sudo true || pkexec --disable-internal-agent "$HELPER" || true
 
-  rm /tmp/roothelper
+  rm "$HELPER"
 fi
 
 exec "$HERE/usr/bin/Labrador" "$@"
