@@ -41,16 +41,16 @@ jobs:
         shell: cmd
         run: |
           cd C:\dev\labrador
-          REM Prepend the Qt path to PATH
+          REM First initialize the Visual Studio build environment
+          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.PLATFORM }}
+          REM Then set the Qt path after VS environment is configured
           set "PATH=C:\Qt\5.12.12\${{ matrix.QT_ARCH }}\bin;%PATH%"
-          REM Initialize the Visual Studio build environment
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.PLATFORM }}
           cd Desktop_Interface
           REM Get short git hash
           for /f "delims=" %%i in ('git rev-parse --short HEAD') do set GIT_HASH_SHORT=%%i
           qmake CONFIG+=release DEFINES+=GIT_HASH_SHORT=%GIT_HASH_SHORT%
           nmake
-
+    
       - name: Post-build steps
         shell: cmd
         run: |
