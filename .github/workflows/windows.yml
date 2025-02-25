@@ -21,6 +21,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      # Install Visual Studio 2017 Build Tools
+      - name: Install Visual Studio 2017 Build Tools
+        shell: powershell
+        run: |
+          # Download the VS 2017 Build Tools installer
+          Invoke-WebRequest -Uri "https://aka.ms/vs/15/release/vs_buildtools.exe" -OutFile "$env:TEMP\vs_buildtools.exe"
+          
+          # Install the Build Tools with necessary workloads and components
+          & "$env:TEMP\vs_buildtools.exe" --quiet --wait --norestart --nocache `
+            --installPath "C:\BuildTools" `
+            --add Microsoft.VisualStudio.Workload.VCTools `
+            --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
+            --add Microsoft.VisualStudio.Component.Windows10SDK.17763 `
+            --includeRecommended
+          
+          # Wait for the installation to complete
+          Start-Sleep -Seconds 10
+
       - name: Install Qt (64-bit & 32-bit)
         uses: jurplel/install-qt-action@v3
         with:
@@ -41,16 +59,16 @@ jobs:
         shell: cmd
         run: |
           cd C:\dev\labrador
-          REM First initialize the Visual Studio build environment
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.PLATFORM }}
-          REM Then set the Qt path after VS environment is configured
+          REM Initialize the VS2017 Build Tools environment
+          call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.PLATFORM }}
+          REM Add Qt to the path after VS environment is configured
           set "PATH=C:\Qt\5.12.12\${{ matrix.QT_ARCH }}\bin;%PATH%"
           cd Desktop_Interface
           REM Get short git hash
           for /f "delims=" %%i in ('git rev-parse --short HEAD') do set GIT_HASH_SHORT=%%i
           qmake CONFIG+=release DEFINES+=GIT_HASH_SHORT=%GIT_HASH_SHORT%
           nmake
-    
+
       - name: Post-build steps
         shell: cmd
         run: |
