@@ -10,7 +10,7 @@ jobs:
       matrix:
         include:
           - QT_ARCH: 'win64_msvc2017_64'
-            PLATFORM: 'amd64'
+            PLATFORM: 'x64'
             PLATFORM_ALT_NAME: 'x64'
             OUTPUT_BIN_DIR: 'bin64'
           - QT_ARCH: 'win32_msvc2017'
@@ -21,64 +21,8 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Install Visual Studio 2017 Build Tools
-      - name: Install Visual Studio 2017 Build Tools
-        shell: powershell
-        run: |
-          # Download the VS 2017 Build Tools installer
-          Invoke-WebRequest -Uri "https://aka.ms/vs/15/release/vs_buildtools.exe" -OutFile "$env:TEMP\vs_buildtools.exe"
-          
-          # Install the Build Tools with necessary workloads and components
-          & "$env:TEMP\vs_buildtools.exe" --quiet --wait --norestart --nocache `
-            --installPath "C:\BuildTools" `
-            --add Microsoft.VisualStudio.Workload.VCTools `
-            --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 `
-            --add Microsoft.VisualStudio.Component.Windows10SDK.17763 `
-            --includeRecommended
-          
-          # Wait for the installation to complete
-          Start-Sleep -Seconds 30
-
-      # Debug: List BuildTools directory structure
-      - name: Debug - List BuildTools Directory Structure
-        shell: powershell
-        run: |
-          Write-Host "=== Listing BuildTools Directory Structure ==="
-          if (Test-Path "C:\BuildTools") {
-            Get-ChildItem -Path "C:\BuildTools" -Recurse -Depth 3 | Select-Object FullName | Sort-Object FullName
-            
-            # Check specifically for VC folder and vcvarsall.bat
-            Write-Host "`n=== Checking for VC folder ==="
-            if (Test-Path "C:\BuildTools\VC") {
-              Write-Host "VC folder exists"
-              Get-ChildItem -Path "C:\BuildTools\VC" -Recurse -Depth 3 | Select-Object FullName | Sort-Object FullName
-            } else {
-              Write-Host "VC folder does not exist"
-            }
-            
-            # Search for vcvarsall.bat in entire BuildTools directory
-            Write-Host "`n=== Searching for vcvarsall.bat ==="
-            Get-ChildItem -Path "C:\BuildTools" -Filter "vcvarsall.bat" -Recurse -File | Select-Object FullName
-            
-            # List all possible paths for VS installation
-            Write-Host "`n=== Checking other possible VS installation locations ==="
-            $possiblePaths = @(
-              "C:\Program Files (x86)\Microsoft Visual Studio\2017",
-              "C:\Program Files\Microsoft Visual Studio\2017",
-              "C:\Program Files (x86)\Microsoft Visual Studio\2019",
-              "C:\Program Files\Microsoft Visual Studio\2019"
-            )
-            foreach ($path in $possiblePaths) {
-              if (Test-Path $path) {
-                Write-Host "Found: $path"
-                Get-ChildItem -Path $path -Recurse -Depth 2 | Select-Object FullName | Sort-Object FullName
-              }
-            }
-          } else {
-            Write-Host "C:\BuildTools directory does not exist!"
-          }
-
-      - name: Install Qt (64-bit & 32-bit)
+      # Install Qt (64-bit & 32-bit)
+      - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
           aqtversion: '==3.1.*'
@@ -94,34 +38,29 @@ jobs:
           mkdir C:\dev\labrador
           xcopy /s /e /i /y "%GITHUB_WORKSPACE%\*" C:\dev\labrador\
 
-      - name: Setup Visual Studio environment and build
+      # Setup MSVC Developer Command Prompt
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.PLATFORM }}
+          toolset: 14.16  # This corresponds to Visual Studio 2017
+
+      # Debug step to check environment
+      - name: Debug environment
         shell: cmd
         run: |
-          cd C:\dev\labrador
-          
-          echo "Current directory: %CD%"
-          echo "Showing available vcvarsall.bat files:"
-          dir /s /b C:\*vcvarsall.bat
-          
-          call "C:\BuildTools\VC\Auxiliary\Build\vcvarsall.bat" ${{ matrix.PLATFORM }}
-          
-          echo "After calling vcvarsall.bat"
           echo "PATH=%PATH%"
-          where cl 2>nul || echo cl not found
-          where nmake 2>nul || echo nmake not found
-          
-          set "PATH=C:\Qt\5.12.12\${{ matrix.QT_ARCH }}\bin;%PATH%"
-          cd Desktop_Interface
-          
-          echo "Before running qmake"
+          where cl
+          where nmake
           where qmake
-          
+
+      # Build step
+      - name: Build Labrador
+        shell: cmd
+        run: |
+          cd C:\dev\labrador\Desktop_Interface
           for /f "delims=" %%i in ('git rev-parse --short HEAD') do set GIT_HASH_SHORT=%%i
           qmake CONFIG+=release DEFINES+=GIT_HASH_SHORT=%GIT_HASH_SHORT%
-          
-          echo "Before running nmake"
-          where nmake
-          
           nmake
 
       - name: Post-build steps
