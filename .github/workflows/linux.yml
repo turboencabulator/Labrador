@@ -53,5 +53,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: ${{ steps.list.outputs.files }}
           tag: 'continuous-Linux'
-          name: "Continuous build (Linux)"
+          release: "Continuous build (Linux)"
           body: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux)."
