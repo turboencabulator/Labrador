@@ -48,9 +48,11 @@ jobs:
       - name: Run uploadtool
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPLOADTOOL_ISPRERELEASE: 'true'
-          UPLOADTOOL_SUFFIX: 'Linux'
-          UPLOADTOOL_BODY: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux)."
+          GITHUB_CONTINUOUS_RELEASE_TYPE: 'prerelease'
+          GITHUB_CONTINUOUS_RELEASE_TAG: 'continuous-Linux'
+          GITHUB_CONTINUOUS_RELEASE_NAME: "Continuous build (Linux)"
+          #UPLOADTOOL_BODY: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux)."
         run: |
-          wget -N https://github.com/probonopd/uploadtool/raw/master/upload.sh
-          bash upload.sh EspoTek_Labrador*.AppImage
+          wget -N https://github.com/TheAssassin/pyuploadtool/releases/download/continuous/pyuploadtool-x86_64.AppImage
+          chmod +x pyuploadtool-x86_64.AppImage
+          ./pyuploadtool-x86_64.AppImage EspoTek_Labrador*.AppImage
