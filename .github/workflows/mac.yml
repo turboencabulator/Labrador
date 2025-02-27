@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -14,8 +14,8 @@ jobs:
         run: |
           brew update
           brew remove --force $(brew list --formula) || true
-          brew install fftw libomp qt5 libusb wget
-          brew link qt5 --force
+          brew install fftw libomp qt@5 libusb eigen
+          brew link libomp qt@5 --force
 
       - name: Build macOS app
         working-directory: ./Desktop_Interface
