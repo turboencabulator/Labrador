@@ -18,7 +18,7 @@ jobs:
           brew link libomp qt@5 --force
 
       - name: Build macOS app
-        working-directory: ./Desktop_Interface
+        working-directory: Desktop_Interface
         run: |
           GIT_HASH_SHORT=$(git rev-parse --short HEAD)
           qmake CONFIG+=release PREFIX=/usr DEFINES+=GIT_HASH_SHORT=$GIT_HASH_SHORT

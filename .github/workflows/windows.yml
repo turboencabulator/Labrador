@@ -49,21 +49,14 @@ jobs:
           target: 'desktop'
           arch: '${{ matrix.QT_ARCH }}'
 
-      # 4) Move repository content to C:\dev\labrador (like AppVeyor clone_folder)
-      - name: Move repository to C:\dev\labrador
-        shell: cmd
-        run: |
-          mkdir C:\dev\labrador
-          xcopy /s /e /i /y "%GITHUB_WORKSPACE%\*" C:\dev\labrador\
-
-      # 5) Activate the newly installed MSVC 2017 environment with toolset 14.16
+      # 4) Activate the newly installed MSVC 2017 environment with toolset 14.16
       - name: Setup MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.PLATFORM }}
           toolset: 14.16
 
-      # 6) Debug step: Confirm cl, nmake, qmake are found
+      # 5) Debug step: Confirm cl, nmake, qmake are found
       - name: Debug environment
         shell: cmd
         run: |
@@ -72,33 +65,33 @@ jobs:
           where nmake
           where qmake
 
-      # 7) Build Labrador
+      # 6) Build Labrador
       - name: Build Labrador
+        working-directory: Desktop_Interface
         shell: cmd
         run: |
-          cd C:\dev\labrador\Desktop_Interface
           for /f "delims=" %%i in ('git rev-parse --short HEAD') do set GIT_HASH_SHORT=%%i
           qmake CONFIG+=release DEFINES+=GIT_HASH_SHORT=%GIT_HASH_SHORT%
           nmake
 
-      # 8) Post-build steps: windeployqt, copy fftw DLL, etc.
+      # 7) Post-build steps: windeployqt, copy fftw DLL, etc.
       - name: Post-build steps
+        working-directory: Desktop_Interface
         shell: cmd
         run: |
-          cd C:\dev\labrador\Desktop_Interface
           windeployqt bin\Labrador.exe
           xcopy /i /s /y "build_win\fftw\${{ matrix.PLATFORM_ALT_NAME }}"\libfftw3-3.dll bin
           del bin\vcredist*.exe
           del bin\*.pdb
 
-      # 9) Upload artifact
+      # 8) Upload artifact
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
           name: Labrador_${{ matrix.PLATFORM }}
-          path: C:\dev\labrador\Desktop_Interface\bin
+          path: Desktop_Interface/bin
 
-      # 10) Optional: Push result to Labrador-win-builder
+      # 9) Optional: Push result to Labrador-win-builder
       - name: Publish update to Labrador-win-builder
         if: success()
         shell: pwsh
@@ -106,6 +99,7 @@ jobs:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           OUTPUT_BIN_DIR: ${{ matrix.OUTPUT_BIN_DIR }}
         run: |
+          mkdir C:\dev
           cd C:\dev
           git clone --depth 1 https://github.com/espotek-org/Labrador-win-builder
           cd Labrador-win-builder
@@ -114,7 +108,7 @@ jobs:
           git config --global user.email "admin@espotek.com"
           git config --global user.name "Chris Esposito"
           git checkout master
-          xcopy /i /s /y C:\dev\labrador\Desktop_Interface\bin $env:OUTPUT_BIN_DIR
+          xcopy /i /s /y "%GITHUB_WORKSPACE%\Desktop_Interface\bin" $env:OUTPUT_BIN_DIR
           git add $env:OUTPUT_BIN_DIR
           git commit -a -m "Automatic update from main Labrador repository"
           git push
