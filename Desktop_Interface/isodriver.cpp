@@ -244,9 +244,21 @@ void isoDriver::startTimer(){
 }
 
 void isoDriver::clearBuffers(bool ch3751, bool ch3752, bool ch750){
-    if(ch3751) internalBuffer375_CH1->clearBuffer();
-    if(ch3752) internalBuffer375_CH2->clearBuffer();
-    if(ch750) internalBuffer750->clearBuffer();
+    if(ch3751)
+    {
+        internalBuffer375_CH1->clearBuffer();
+        internalBuffer375_CH1->async_dft->clearWindow();
+    }
+    if(ch3752)
+    {
+        internalBuffer375_CH2->clearBuffer();
+        internalBuffer375_CH2->async_dft->clearWindow();
+    }
+    if(ch750)
+    {
+        internalBuffer750->clearBuffer();
+        internalBuffer750->async_dft->clearWindow();
+    }
 }
 
 void isoDriver::setVisible_CH2(bool visible){
