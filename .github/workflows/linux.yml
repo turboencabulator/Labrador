@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  build-appimage:
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
@@ -24,7 +24,33 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
+          name: appimage
           path: Desktop_Interface/EspoTek_Labrador*.AppImage
+          compression-level: 0
+          if-no-files-found: error
+
+  build-deb:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y software-properties-common
+          sudo apt-get install -y build-essential libfftw3-dev qtbase5-dev libusb-1.0-0-dev libeigen3-dev
+
+      - name: Build Debian package
+        working-directory: Desktop_Interface
+        run: |
+          ./make_deb
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: deb
+          path: Desktop_Interface/EspoTek_Labrador*.deb
           compression-level: 0
           if-no-files-found: error
 
@@ -32,7 +58,8 @@ jobs:
     permissions:
       contents: write
     needs:
-      - build
+      - build-appimage
+      - build-deb
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
@@ -43,7 +70,7 @@ jobs:
 
       - name: List artifacts
         run: |
-          ls -alR
+          find . -type f
 
       - name: Run uploadtool
         env:
@@ -53,4 +80,5 @@ jobs:
           UPLOADTOOL_BODY: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux)."
         run: |
           wget -N https://github.com/probonopd/uploadtool/raw/master/upload.sh
-          bash upload.sh EspoTek_Labrador*.AppImage
+          chmod +x ./upload.sh
+          find . -type f -not -path ./upload.sh -exec ./upload.sh {} +
