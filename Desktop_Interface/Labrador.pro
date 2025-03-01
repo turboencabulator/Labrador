@@ -189,7 +189,7 @@ unix:!android:!macx{
     desktop.path = /usr/share/applications
 
     symlink.path = /usr/bin
-    symlink.extra = ln -sf ${INSTALL_ROOT}/usr/bin/EspoTek-Labrador/Labrador /usr/bin/labrador
+    symlink.extra = ln -sf EspoTek-Labrador/Labrador ${INSTALL_ROOT}/usr/bin/labrador
 
     udevextra.path = /lib/udev/rules.d
     !equals(DEB, 1){
