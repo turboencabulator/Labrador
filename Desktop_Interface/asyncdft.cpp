@@ -75,7 +75,6 @@ void AsyncDFT::addSample(short sample)
 void AsyncDFT::clearWindow()
 {
     window.clear();
-    data_valid = false;
     samples_count = 0;
 }
 
