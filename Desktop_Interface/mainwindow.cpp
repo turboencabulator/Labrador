@@ -255,17 +255,19 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->controller_iso, &isoDriver::enableCursorGroup, this, &MainWindow::cursorGroupEnabled);
 
     // Frequency spectrum
-    spectrumMinXSpinbox = new QSpinBox();
-    spectrumMaxXSpinbox = new QSpinBox();
+    spectrumMinXSpinbox = new espoSpinBox();
+    spectrumMaxXSpinbox = new espoSpinBox();
     spectrumLayoutWidget = new QWidget();
     QHBoxLayout* spectrumLayout = new QHBoxLayout(spectrumLayoutWidget);
-    QLabel* spectrumMinFreqLabel = new QLabel("Min Frequency (Hz)");
-    QLabel* spectrumMaxFreqLabel = new QLabel("Max Frequency (Hz)");
+    QLabel* spectrumMinFreqLabel = new QLabel("Min Frequency");
+    QLabel* spectrumMaxFreqLabel = new QLabel("Max Frequency");
     QSpacerItem* spacer = new QSpacerItem(20, 40, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     spectrumLayoutWidget->setLayout(spectrumLayout);
+    spectrumMinXSpinbox->setSuffix(QString::fromUtf8("Hz"));
     spectrumMinXSpinbox->setMinimum(0);
     spectrumMinXSpinbox->setMaximum(187500);
+    spectrumMaxXSpinbox->setSuffix(QString::fromUtf8("Hz"));
     spectrumMaxXSpinbox->setMinimum(0);
     spectrumMaxXSpinbox->setMaximum(187500);
     spectrumMaxXSpinbox->setValue(187500);
@@ -278,11 +280,14 @@ MainWindow::MainWindow(QWidget *parent) :
     spectrumLayout->addWidget(spectrumMaxXSpinbox);
     spectrumLayout->addItem(spacer);
 
-    connect(spectrumMinXSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMinSpectrum);
-    connect(spectrumMaxXSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMaxSpectrum);
+    connect(spectrumMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMinSpectrum);
+    connect(spectrumMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMaxSpectrum);
 
-    connect(spectrumMinXSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), spectrumMaxXSpinbox, &QSpinBox::setMinimum);
-    connect(spectrumMaxXSpinbox, QOverload<int>::of(&QSpinBox::valueChanged), spectrumMinXSpinbox, &QSpinBox::setMaximum);
+    connect(spectrumMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), spectrumMaxXSpinbox, &espoSpinBox::setMinimum);
+    connect(spectrumMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), spectrumMinXSpinbox, &espoSpinBox::setMaximum);
+
+    connect(spectrumMinXSpinbox, SIGNAL(valueChanged(double)), spectrumMinXSpinbox, SLOT(changeStepping(double)));
+    connect(spectrumMaxXSpinbox, SIGNAL(valueChanged(double)), spectrumMaxXSpinbox, SLOT(changeStepping(double)));
 
     ui->verticalLayout->addWidget(spectrumLayoutWidget);
     spectrumLayoutWidget->setVisible(false);
