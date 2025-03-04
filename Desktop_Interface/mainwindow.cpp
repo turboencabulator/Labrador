@@ -267,10 +267,12 @@ MainWindow::MainWindow(QWidget *parent) :
     spectrumMinXSpinbox->setSuffix(QString::fromUtf8("Hz"));
     spectrumMinXSpinbox->setMinimum(0);
     spectrumMinXSpinbox->setMaximum(187500);
+    spectrumMinXSpinbox->setSingleStep(1000);
     spectrumMaxXSpinbox->setSuffix(QString::fromUtf8("Hz"));
     spectrumMaxXSpinbox->setMinimum(0);
     spectrumMaxXSpinbox->setMaximum(187500);
     spectrumMaxXSpinbox->setValue(187500);
+    spectrumMaxXSpinbox->setSingleStep(10000);
 
     spectrumLayout->addItem(spacer);
     spectrumLayout->addWidget(spectrumMinFreqLabel);
@@ -312,10 +314,12 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespMinXSpinbox->setMinimum(100);
     freqRespMinXSpinbox->setMaximum(62500);
     freqRespMinXSpinbox->setValue(100);
+    freqRespMinXSpinbox->setSingleStep(10);
     freqRespMaxXSpinbox->setSuffix(QString::fromUtf8("Hz"));
     freqRespMaxXSpinbox->setMinimum(100);
     freqRespMaxXSpinbox->setMaximum(62500);
     freqRespMaxXSpinbox->setValue(32500);
+    freqRespMaxXSpinbox->setSingleStep(1000);
 
     freqRespLayout1->addItem(spacer);
     freqRespLayout1->addWidget(freqRespMinFreqLabel);
@@ -330,6 +334,7 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespStepSpinbox->setMinimum(10);
     freqRespStepSpinbox->setMaximum(10000);
     freqRespStepSpinbox->setValue(100);
+    freqRespStepSpinbox->setSingleStep(10);
     freqRespTypeComboBox->addItem("Gain");
     freqRespTypeComboBox->addItem("Phase");
     freqRespTypeComboBox->setCurrentIndex(0);
