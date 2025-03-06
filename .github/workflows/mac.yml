@@ -22,7 +22,7 @@ jobs:
         run: |
           GIT_HASH_SHORT=$(git rev-parse --short HEAD)
           qmake CONFIG+=release PREFIX=/usr DEFINES+=GIT_HASH_SHORT=$GIT_HASH_SHORT
-          make -j$(sysctl -n hw.ncpu)
+          make
           mkdir -p bin/Labrador.app/Contents/MacOS/Resources
           mkdir -p bin/Labrador.app/Contents/Frameworks
           cp -r bin/firmware bin/Labrador.app/Contents/MacOS
@@ -43,7 +43,6 @@ jobs:
       contents: write
     needs:
       - build
-    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     steps:
       - name: Download artifacts
