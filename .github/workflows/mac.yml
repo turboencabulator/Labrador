@@ -69,4 +69,7 @@ jobs:
             - That's it, you're done!  From now on you can open by simply double-clicking as you would any other app
         run: |
           wget -N https://github.com/probonopd/uploadtool/raw/master/upload.sh
+          UPLOADTOOL_BODY="$(echo "$UPLOADTOOL_BODY" | jq -Rsa '.')"
+          UPLOADTOOL_BODY="${UPLOADTOOL_BODY%\"}"
+          UPLOADTOOL_BODY="${UPLOADTOOL_BODY#\"}"
           bash upload.sh Labrador.dmg
