@@ -77,8 +77,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UPLOADTOOL_ISPRERELEASE: 'true'
           UPLOADTOOL_SUFFIX: 'Linux'
-          UPLOADTOOL_BODY: "EspoTek Labrador software for Linux. This should be compatible with all modern 64-bit distros. If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux)."
+          UPLOADTOOL_BODY: |-
+            EspoTek Labrador software for Linux.  This should be compatible with all modern 64-bit distros.
+            If you're running 32-bit Linux, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-for-32-bit-Linux).
         run: |
+          UPLOADTOOL_BODY="$(echo "$UPLOADTOOL_BODY" | jq -Rsa '.')"
+          UPLOADTOOL_BODY="${UPLOADTOOL_BODY%\"}"
+          UPLOADTOOL_BODY="${UPLOADTOOL_BODY#\"}"
+
           wget -N https://github.com/probonopd/uploadtool/raw/master/upload.sh
           chmod +x ./upload.sh
           find . -type f -not -path ./upload.sh -exec ./upload.sh {} +
