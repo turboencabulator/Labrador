@@ -13,11 +13,9 @@ jobs:
           - QT_ARCH: 'win64_msvc2019_64'
             PLATFORM: 'x64'
             PLATFORM_ALT_NAME: 'x64'
-            OUTPUT_BIN_DIR: 'bin64'
           - QT_ARCH: 'win32_msvc2019'
             PLATFORM: 'x86'
             PLATFORM_ALT_NAME: 'x86'
-            OUTPUT_BIN_DIR: 'bin32'
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
