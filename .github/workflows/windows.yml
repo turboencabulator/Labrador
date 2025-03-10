@@ -78,25 +78,3 @@ jobs:
         with:
           name: Labrador_${{ matrix.PLATFORM }}
           path: Desktop_Interface/bin
-
-      # 8) Optional: Push result to Labrador-win-builder
-      - name: Publish update to Labrador-win-builder
-        if: success()
-        shell: pwsh
-        env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          OUTPUT_BIN_DIR: ${{ matrix.OUTPUT_BIN_DIR }}
-        run: |
-          mkdir C:\dev
-          cd C:\dev
-          git clone --depth 1 https://github.com/espotek-org/Labrador-win-builder
-          cd Labrador-win-builder
-          git config --global credential.helper store
-          Add-Content "$env:USERPROFILE\.git-credentials" "https://$env:ACCESS_TOKEN:x-oauth-basic@github.com`n"
-          git config --global user.email "admin@espotek.com"
-          git config --global user.name "Chris Esposito"
-          git checkout master
-          xcopy /i /s /y "%GITHUB_WORKSPACE%\Desktop_Interface\bin" $env:OUTPUT_BIN_DIR
-          git add $env:OUTPUT_BIN_DIR
-          git commit -a -m "Automatic update from main Labrador repository"
-          git push
