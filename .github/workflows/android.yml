@@ -28,5 +28,5 @@ jobs:
       - name: Build Android package
         working-directory: Desktop_Interface
         run: |
-          qmake -spec android-clang
+          qmake
           make
