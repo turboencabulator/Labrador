@@ -929,6 +929,8 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
                 }
 
                 axes->graph(0)->setData(f, amplitude1);
+                axes->xAxis->setLabel("Frequency (Hz)");
+                axes->yAxis->setLabel("Relative Power (dBmv)");
                 axes->xAxis->setRange(m_spectrumMinX, m_spectrumMaxX);
                 /*Setting maximum/minimum y-axis -60dbmv to 90dbmv*/
                 axes->yAxis->setRange(90,-60);
@@ -1043,9 +1045,11 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
             }
 
             // Plot gain response
+            axes->xAxis->setLabel("Frequency (Hz)");
             if(m_freqRespType == 0)
             {
                 axes->graph(0)->setData(m_freqRespFreq, m_freqRespGain);
+                axes->yAxis->setLabel("Gain (dB)");
                 axes->xAxis->setRange(m_freqRespMin-10, m_freqRespMax+10);
                 axes->yAxis->setRange(*std::min_element(m_freqRespGain.constBegin(), m_freqRespGain.constEnd())-10, *std::max_element(m_freqRespGain.constBegin(), m_freqRespGain.constEnd())+10);
             }
@@ -1053,6 +1057,7 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
             else
             {
                 axes->graph(0)->setData(m_freqRespFreq, m_freqRespPhase);
+                axes->yAxis->setLabel("Phase (degree)");
                 axes->xAxis->setRange(m_freqRespMin-10, m_freqRespMax+10);
                 axes->yAxis->setRange(*std::min_element(m_freqRespPhase.constBegin(), m_freqRespPhase.constEnd())-10, *std::max_element(m_freqRespPhase.constBegin(), m_freqRespPhase.constEnd())+10);
             }
@@ -1060,9 +1065,13 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
         } else {
             axes->graph(0)->setData(x,CH1);
             if(CH2_mode) axes->graph(1)->setData(x,CH2);
+            axes->xAxis->setLabel("Time (sec)");
+            axes->yAxis->setLabel("Voltage (v)");
             axes->xAxis->setRange(-display.window - display.delay, -display.delay);
             axes->yAxis->setRange(display.topRange, display.botRange);
         }
+        axes->xAxis->setLabelColor(Qt::white);
+        axes->yAxis->setLabelColor(Qt::white);
     }
 
     if(snapshotEnabled_CH1){
