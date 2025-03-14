@@ -2673,6 +2673,7 @@ void MainWindow::on_actionFrequency_Response_triggered(bool checked)
         spectrumLayoutWidget->setVisible(false);
         ui->actionFrequency_Spectrum->setChecked(false);
         ui->doubleSampleLabel->setChecked(false);
+        ui->multimeterGroup->setChecked(false);
         ui->scopeGroup_CH1->setChecked(true);
         ui->scopeGroup_CH2->setChecked(true);
     }
