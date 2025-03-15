@@ -78,7 +78,7 @@ void AsyncDFT::clearWindow()
     samples_count = 0;
 }
 
-QVector<double> AsyncDFT::getPowerSpectrum_db(QVector<double> input, double wind_fact_sum)
+QVector<double> AsyncDFT::getPowerSpectrum_dbmv(QVector<double> input, double wind_fact_sum)
 {
     /*Before doing anything, check if sliding DFT is computable*/
     if (data_valid == false) {
@@ -93,25 +93,20 @@ QVector<double> AsyncDFT::getPowerSpectrum_db(QVector<double> input, double wind
     QVector<double> amplitude(n_samples/2+1,0);
     maximum = -1;
 
-    /*windowing correction*/
-    double wind_corr = 2*std::log10(wind_fact_sum/n_samples);
-
     /*Executing FFTW plan*/
     fftw_execute(plan);
-    amplitude[0] = 10*(6+std::log10(out_buffer[0][0]*out_buffer[0][0] + out_buffer[0][1]*out_buffer[0][1])-10.235019853-wind_corr);  /* DC component */
 
-    maximum = (amplitude[0] > maximum ) ? amplitude[0] : maximum;
-
-    for (int k = 1; k < (n_samples+1)/2; ++k) {  /* (k < N/2 rounded up) */
-         amplitude[k] = 10*(6+std::log10(out_buffer[k][0]*out_buffer[k][0] + out_buffer[k][1]*out_buffer[k][1])-10.235019853-wind_corr);
+    /* dBmv = 20*log10(|V_fft,mv/N|) - wind_corr
+       dBmv = 20*log10(|V_fft,mv/N|) - 20*log10(∑(Wi)/N)
+       dBmv = 20*log10((10^3) * |V_fft| / N) - 20*log10(∑(Wi) / N)
+       dBmv = 20*(log10(10^3)) + 20*log10(|V_fft|) - 20*log10(N)) - 20*log10(∑Wi) + 20*log10(N)
+       dBmv = 60 + 20*log10(|V_fft|)) - 20*log10(∑Wi)
+       dBmv = 60 + 10*log10(|V_fft|^2) - 20*log10(∑Wi)
+    */
+    for (int k = 0; k <= (n_samples+1)/2; ++k) {
+         amplitude[k] = 60 + 10*std::log10(out_buffer[k][0]*out_buffer[k][0] + out_buffer[k][1]*out_buffer[k][1]) - 20*std::log10(wind_fact_sum);
 
          maximum = (amplitude[k] > maximum ) ? amplitude[k] : maximum;
-    }
-    if (n_samples % 2 == 0) { /* N is even */
-         amplitude[n_samples/2] = 10*(6+std::log10(out_buffer[n_samples/2][0]*out_buffer[n_samples/2][0])-10.235019853-wind_corr);  /* Nyquist freq. */
-
-         maximum = (amplitude[n_samples/2] > maximum ) ? amplitude[n_samples/2] : maximum;
-
     }
 
     return amplitude;

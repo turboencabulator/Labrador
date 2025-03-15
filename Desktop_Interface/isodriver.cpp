@@ -904,9 +904,9 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
                 /*Creating DFT amplitudes*/
                 QVector<double> amplitude1;
                 if(CH1_mode == -1)
-                    amplitude1 = internalBuffer750->async_dft->getPowerSpectrum_db(converted_dt_samples1, wind_fact_sum);
+                    amplitude1 = internalBuffer750->async_dft->getPowerSpectrum_dbmv(converted_dt_samples1, wind_fact_sum);
                 else
-                    amplitude1 = internalBuffer375_CH1->async_dft->getPowerSpectrum_db(converted_dt_samples1, wind_fact_sum);
+                    amplitude1 = internalBuffer375_CH1->async_dft->getPowerSpectrum_dbmv(converted_dt_samples1, wind_fact_sum);
                 /*Getting array of frequencies for display purposes*/
                 QVector<double> f;
                 if(CH1_mode == -1)
@@ -923,7 +923,7 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
                 double max2 = -1;
 
                 if(CH2_mode) {
-                    QVector<double> amplitude2 = internalBuffer375_CH2->async_dft->getPowerSpectrum_db(converted_dt_samples2, wind_fact_sum);
+                    QVector<double> amplitude2 = internalBuffer375_CH2->async_dft->getPowerSpectrum_dbmv(converted_dt_samples2, wind_fact_sum);
                     max2 = internalBuffer375_CH2->async_dft->maximum;
                     axes->graph(1)->setData(f,amplitude2);
                 }
