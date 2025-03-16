@@ -50,6 +50,7 @@ if [ ! -f "/etc/udev/rules.d/$RULES" ] \
   cat > "$HELPER" <<EOHelper
 #!/bin/sh
 set -e
+mkdir -p /run/udev/rules.d
 cat > /run/udev/rules.d/$RULES <<\EORules
 $(<"$HERE/lib/udev/rules.d/$RULES")
 EORules
