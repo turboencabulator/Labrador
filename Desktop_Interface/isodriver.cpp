@@ -904,9 +904,9 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
                 /*Creating DFT amplitudes*/
                 QVector<double> amplitude1;
                 if(CH1_mode == -1)
-                    amplitude1 = internalBuffer750->async_dft->getPowerSpectrum_dbmv(converted_dt_samples1, wind_fact_sum);
+                    amplitude1 = internalBuffer750->async_dft->getPowerSpectrum_dBmV(converted_dt_samples1, wind_fact_sum);
                 else
-                    amplitude1 = internalBuffer375_CH1->async_dft->getPowerSpectrum_dbmv(converted_dt_samples1, wind_fact_sum);
+                    amplitude1 = internalBuffer375_CH1->async_dft->getPowerSpectrum_dBmV(converted_dt_samples1, wind_fact_sum);
                 /*Getting array of frequencies for display purposes*/
                 QVector<double> f;
                 if(CH1_mode == -1)
@@ -923,16 +923,16 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
                 double max2 = -1;
 
                 if(CH2_mode) {
-                    QVector<double> amplitude2 = internalBuffer375_CH2->async_dft->getPowerSpectrum_dbmv(converted_dt_samples2, wind_fact_sum);
+                    QVector<double> amplitude2 = internalBuffer375_CH2->async_dft->getPowerSpectrum_dBmV(converted_dt_samples2, wind_fact_sum);
                     max2 = internalBuffer375_CH2->async_dft->maximum;
                     axes->graph(1)->setData(f,amplitude2);
                 }
 
                 axes->graph(0)->setData(f, amplitude1);
                 axes->xAxis->setLabel("Frequency (Hz)");
-                axes->yAxis->setLabel("Relative Power (dBmv)");
+                axes->yAxis->setLabel("Relative Power (dBmV)");
                 axes->xAxis->setRange(m_spectrumMinX, m_spectrumMaxX);
-                /*Setting maximum/minimum y-axis -60dbmv to 90dbmv*/
+                /*Setting maximum/minimum y-axis -60dBmV to 90dBmV*/
                 axes->yAxis->setRange(90,-60);
             }  catch (std::exception) {
                 std::cout << "Cannot yet get correct value for DFT" << std::endl;
@@ -1066,7 +1066,7 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
             axes->graph(0)->setData(x,CH1);
             if(CH2_mode) axes->graph(1)->setData(x,CH2);
             axes->xAxis->setLabel("Time (sec)");
-            axes->yAxis->setLabel("Voltage (v)");
+            axes->yAxis->setLabel("Voltage (V)");
             axes->xAxis->setRange(-display.window - display.delay, -display.delay);
             axes->yAxis->setRange(display.topRange, display.botRange);
         }

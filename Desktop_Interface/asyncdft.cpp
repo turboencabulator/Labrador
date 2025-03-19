@@ -78,7 +78,7 @@ void AsyncDFT::clearWindow()
     samples_count = 0;
 }
 
-QVector<double> AsyncDFT::getPowerSpectrum_dbmv(QVector<double> input, double wind_fact_sum)
+QVector<double> AsyncDFT::getPowerSpectrum_dBmV(QVector<double> input, double wind_fact_sum)
 {
     /*Before doing anything, check if sliding DFT is computable*/
     if (data_valid == false) {
@@ -96,12 +96,12 @@ QVector<double> AsyncDFT::getPowerSpectrum_dbmv(QVector<double> input, double wi
     /*Executing FFTW plan*/
     fftw_execute(plan);
 
-    /* dBmv = 20*log10(|V_fft,mv/N|) - wind_corr
-       dBmv = 20*log10(|V_fft,mv/N|) - 20*log10(∑(Wi)/N)
-       dBmv = 20*log10((10^3) * |V_fft| / N) - 20*log10(∑(Wi) / N)
-       dBmv = 20*(log10(10^3)) + 20*log10(|V_fft|) - 20*log10(N)) - 20*log10(∑Wi) + 20*log10(N)
-       dBmv = 60 + 20*log10(|V_fft|)) - 20*log10(∑Wi)
-       dBmv = 60 + 10*log10(|V_fft|^2) - 20*log10(∑Wi)
+    /* dBmV = 20*log10(|V_fft,mv/N|) - wind_corr
+       dBmV = 20*log10(|V_fft,mv/N|) - 20*log10(∑(Wi)/N)
+       dBmV = 20*log10((10^3) * |V_fft| / N) - 20*log10(∑(Wi) / N)
+       dBmV = 20*(log10(10^3)) + 20*log10(|V_fft|) - 20*log10(N)) - 20*log10(∑Wi) + 20*log10(N)
+       dBmV = 60 + 20*log10(|V_fft|)) - 20*log10(∑Wi)
+       dBmV = 60 + 10*log10(|V_fft|^2) - 20*log10(∑Wi)
     */
     for (int k = 0; k <= (n_samples+1)/2; ++k) {
          amplitude[k] = 60 + 10*std::log10(out_buffer[k][0]*out_buffer[k][0] + out_buffer[k][1]*out_buffer[k][1]) - 20*std::log10(wind_fact_sum);
