@@ -28,5 +28,6 @@ jobs:
       - name: Build Android package
         working-directory: Desktop_Interface
         run: |
+          ls -alR $ANDROID_NDK
           qmake
           make
