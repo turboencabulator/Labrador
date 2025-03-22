@@ -25,6 +25,13 @@ jobs:
           target: 'android'
           arch: 'android_armv7'
 
+      - name: Install SDK
+        uses: maxim-lobanov/setup-android-tools@v1
+        with:
+          packages: |
+            platforms;android-27
+            build-tools;27.0.3
+
       - name: Install NDK
         uses: nttld/setup-ndk@v1
         id: setup-ndk
