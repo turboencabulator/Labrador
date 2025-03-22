@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -20,10 +20,10 @@ jobs:
         uses: jurplel/install-qt-action@v3
         with:
           aqtversion: '==3.1.*'
-          version: '5.15.2'
+          version: '5.10.1'
           host: 'linux'
           target: 'android'
-          arch: 'android'
+          arch: 'android_armv7'
 
       - name: Build Android package
         working-directory: Desktop_Interface
