@@ -35,9 +35,7 @@ jobs:
       - name: Build Android package
         working-directory: Desktop_Interface
         env:
-          ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
-          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
-          ls -alR $ANDROID_NDK
           qmake
           make
