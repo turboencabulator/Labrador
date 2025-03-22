@@ -39,3 +39,5 @@ jobs:
         run: |
           qmake
           make
+          make INSTALL_ROOT=out install
+          androiddeployqt --input android-libLabrador.so-deployment-settings.json --output out --verbose --gradle --no-gdbserver
