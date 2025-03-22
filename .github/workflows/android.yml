@@ -1,0 +1,32 @@
+name: Build Android
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      #- name: Install dependencies
+      #  run: |
+      #    sudo apt-get update
+      #    sudo apt-get install -y software-properties-common
+      #    sudo apt-get install -y libfftw3-dev qtbase5-dev libusb-1.0-0-dev libeigen3-dev
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: '==3.1.*'
+          version: '5.15.2'
+          host: 'linux'
+          target: 'android'
+          arch: 'android'
+
+      - name: Build Android package
+        working-directory: Desktop_Interface
+        run: |
+          qmake
+          make
