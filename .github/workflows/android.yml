@@ -25,6 +25,9 @@ jobs:
           target: 'android'
           arch: 'android_armv7'
 
+      - name: Find sdkmanager
+        run: find ${ANDROID_HOME} -type f -name sdkmanager
+
       - name: Install SDK
         uses: maxim-lobanov/setup-android-tools@v1
         with:
