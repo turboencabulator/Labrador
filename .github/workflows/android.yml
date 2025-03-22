@@ -25,8 +25,18 @@ jobs:
           target: 'android'
           arch: 'android_armv7'
 
+      - name: Install NDK
+        uses: nttld/setup-ndk@v1
+        id: setup-ndk
+        with:
+          ndk-version: r15c
+          add-to-path: false
+
       - name: Build Android package
         working-directory: Desktop_Interface
+        env:
+          ANDROID_NDK: ${{ steps.setup-ndk.outputs.ndk-path }}
+          ANDROID_NDK_HOME: ${{ steps.setup-ndk.outputs.ndk-path }}
         run: |
           ls -alR $ANDROID_NDK
           qmake
