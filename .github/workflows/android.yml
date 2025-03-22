@@ -40,4 +40,4 @@ jobs:
           qmake
           make
           make INSTALL_ROOT=out install
-          androiddeployqt --input android-libLabrador.so-deployment-settings.json --output out --verbose --gradle --no-gdbserver
+          JAVA_HOME=${JAVA_HOME_8_X64} androiddeployqt --input android-libLabrador.so-deployment-settings.json --output out --verbose --gradle --no-gdbserver
