@@ -160,7 +160,6 @@ private slots:
 
     void serialEmergencyDisable(int channel);
 
-    void checkForI2C(int value);
     void on_actionFirmware_Recovery_triggered();
 
     void on_actionShow_Debug_Console_triggered();
@@ -184,16 +183,59 @@ private slots:
 
     void on_kickstartIsoButton_clicked();
 
+    void on_actionCalibrate_2_triggered();
+
+    void calibrate_psu_stage2();
+
+    void calibrate_psu_stage3();
+
+    void on_actionSerial_triggered(bool checked);
+
+    void on_actionI2C_triggered(bool checked);
+
+    void on_actionShow_Range_Dialog_on_Main_Page_triggered(bool checked);
+
+	void paused(bool enabled);
+
+    void on_actionNone_triggered();
+
+    void on_actionNone_2_triggered();
+
+    void on_actionEven_triggered();
+
+    void on_actionOdd_triggered();
+
+    void on_actionEven_2_triggered();
+
+    void on_actionOdd_2_triggered();
+
+    void on_actionDocumentation_triggered();
+
+    void on_actionPinout_triggered();
+
+    void cursorGroupEnabled(bool enabled);
+
+    void on_actionHide_Widget_Oscilloscope_triggered(bool checked);
+
+    void on_actionHide_Widget_SignalGen_triggered(bool checked);
+
+    void on_actionHide_Widget_Multimeter_triggered(bool checked);
+
+    void on_actionHide_Widget_PowerSupply_triggered(bool checked);
+
+    void on_actionHide_Widget_LogicAnalyzer_triggered(bool checked);
+
 private:
     //Generic Vars
     Ui::MainWindow *ui;
     QWheelEvent *wheelEmu;
     bool forceSquare = false;
     QCPItemText *textLabel;
-    QDir *outputDir;
     QFile *output375_CH1, *output375_CH2, *output750;
     unsigned char caibrateStage;
     QMessageBox *calibrationMessages;
+    double PSU5, PSU10;
+    double psu_voltage_calibration_offset;
 
     int reinitdeviceMode;
     double reinitScopeGain;
@@ -201,6 +243,7 @@ private:
     int reinitDigitalPinState;
 
     QSettings *settings;
+	bool calibrationCanceled = false;
 
     //Generic Functions
     void initialisePlot();
@@ -217,8 +260,11 @@ private:
     QActionGroup *rangeGroupC;
     QActionGroup *uartBaudGroup_CH1;
     QActionGroup *uartBaudGroup_CH2;
+    QActionGroup *uartParityGroup_CH1;
+    QActionGroup *uartParityGroup_CH2;
     QActionGroup *fpsGroup;
     QActionGroup *connectionTypeGroup;
+    QActionGroup *serialProtocolGroup;
     QShortcut *shortcut_cycleBaudRate_CH1;
     QShortcut *shortcut_cycleBaudRateBackwards_CH1;
     QShortcut *shortcut_cycleBaudRate_CH2;
@@ -249,6 +295,8 @@ private:
     int dt_userWantsToCalibrate;
     int daq_num_to_average;
     qulonglong daq_max_file_size;
+
+    scopeRangeEnterDialog* scopeRangeSwitch = nullptr;
 
 #ifdef PLATFORM_ANDROID
     //Android Special

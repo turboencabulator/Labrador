@@ -9,53 +9,97 @@
 #include "genericusbdriver.h"
 #include "desktop_settings.h"
 #include "siprint.h"
+#include "i2cdecoder.h"
+#include "uartstyledecoder.h"
 
 class isoBuffer;
 class isoBuffer_file;
 
-//isoDriver is a huge class.  It handles everything related to the isochronous IN stream - and perhaps that constraint was applied a bit too loosely (spot the C programmer...).
-//Too much stuff is handled in this class, and it's too heavily entangled with the (generic/win/unix)UsbDriver classes.
-//That is one of the things I plan on fixing, and in fact the reason why I began the commenting!
+// isoDriver is a huge class.  It handles everything related to the
+// isochronous IN stream - and perhaps that constraint was applied
+// a bit too loosely (spot the C programmer...).
+
+// Too much stuff is handled in this class, and it's too heavily
+// entangled with the (generic/win/unix)UsbDriver classes.
+
+// That is one of the things I plan on fixing, and in fact
+// the reason why I began the commenting!
+
+class DisplayControl : public QObject
+{
+    Q_OBJECT
+public:
+
+    double delay = 0;
+    double window = 0.01;
+    double y0 = 0;
+    double y1 = 0;
+    double x0 = 0;
+    double x1 = 0;
+    double topRange = 2.5;
+    double botRange = -0.5;
+
+    void setVoltageRange (QWheelEvent* event, bool isProperlyPaused, double maxWindowSize, QCustomPlot* axes);
+
+signals:
+    void topRangeUpdated(double);
+    void botRangeUpdated(double);
+    void timeWindowUpdated(double);
+    void delayUpdated(double);
+};
 
 class isoDriver : public QLabel
 {
     Q_OBJECT
 public:
     explicit isoDriver(QWidget *parent = 0);
+    void autoGain(void);
     //Generic Vars
-    isoBuffer *internalBuffer375_CH1, *internalBuffer375_CH2, *internalBuffer750;
+    isoBuffer *internalBuffer375_CH1;
+    isoBuffer *internalBuffer375_CH2;
+    isoBuffer *internalBuffer750;
     isoBuffer_file *internalBufferFile = NULL;
 #if QCP_VER == 1
     QCPItemText *cursorTextPtr;
 #endif
     genericUsbDriver *driver;
     bool doNotTouchGraph = true;
-    double ch1_ref = 1.65, ch2_ref = 1.65;
-    double frontendGain_CH1 = (R4/(R3+R4)), frontendGain_CH2 = (R4/(R3+R4));
+    double ch1_ref = 1.65;
+    double ch2_ref = 1.65;
+    double frontendGain_CH1 = (R4/(R3+R4));
+    double frontendGain_CH2 = (R4/(R3+R4));
+    UartParity parity_CH1 = UartParity::None;
+    UartParity parity_CH2 = UartParity::None;
     //State Vars
-    bool AC_CH1 = false, AC_CH2 = false;
+    bool AC_CH1 = false;
+    bool AC_CH2 = false;
     bool cursorStatsEnabled = true;
-    int baudRate_CH1 = 9600, baudRate_CH2 = 9600;
+    int baudRate_CH1 = 9600;
+    int baudRate_CH2 = 9600;
     double currentVmean;
-    //Display Control Vars     (Variables that control how the buffers are displayed)
-    double delay = 0, window = 0.01;
-    double y0=0, y1=0, x0=0, x1=0;
-    double topRange=2.5, botRange=-0.5;
+    //Display Control Vars (Variables that control how the buffers are displayed)
+    DisplayControl display;
     //Generic Functions
     void setDriver(genericUsbDriver *newDriver);
     void setAxes(QCustomPlot *newAxes);
     double meanVoltageLast(double seconds, unsigned char channel, int TOP);
     void loadFileBuffer(QFile *fileToLoad);
+    void setSerialType(unsigned char type);
     //DAQ
     bool fileModeEnabled = false;
     double daq_maxWindowSize;
 private:
     //Those bloody bools that just Enable/Disable a single property
-    bool paused_CH1 = false, paused_CH2 = false, paused_multimeter = false;
+    bool paused_CH1 = false;
+    bool paused_CH2 = false;
+    bool paused_multimeter = false;
     bool autoGainEnabled = true;
-    bool placingHoriAxes = false, placingVertAxes = false, horiCursorEnabled = false, vertCursorEnabled = false;
-    bool triggerSeeking = true;
+    bool placingHoriAxes = false; // TODO: move into DisplayControl
+    bool placingVertAxes = false; // TODO: move into DisplayControl
+    bool horiCursorEnabled = false; // TODO: move into DisplayControl
+    bool vertCursorEnabled = false; // TODO: move into DisplayControl
     bool triggerEnabled = false;
+    bool singleShotEnabled = false;
     bool multimeterShow = true;
     bool autoMultimeterV = true;
     bool autoMultimeterI = true;
@@ -69,55 +113,75 @@ private:
     bool forceAmps = false;
     bool forceOhms = false;
     bool forceNFarads = false;
-    bool serialDecodeEnabled_CH1 = false, serialDecodeEnabled_CH2 = false;
+    bool serialDecodeEnabled_CH1 = false;
+    bool serialDecodeEnabled_CH2 = false;
     bool XYmode = false;
-    bool update_CH1 = true, update_CH2 = true;
+    bool update_CH1 = true;
+    bool update_CH2 = true;
     bool snapshotEnabled_CH1 = false;
     bool snapshotEnabled_CH2 = false;
     bool firstFrame = true;
-    double triggerDelay;
-    bool singleShotEnabled = false;
+    bool hexDisplay_CH1 = false;
+    bool hexDisplay_CH2 = false;
     //Generic Functions
     void analogConvert(short *shortPtr, QVector<double> *doublePtr, int TOP, bool AC, int channel);
     void digitalConvert(short *shortPtr, QVector<double> *doublePtr);
     void fileStreamConvert(float *floatPtr, QVector<double> *doublePtr);
     bool properlyPaused();
-    void autoGain(void);
     void udateCursors(void);
     short reverseFrontEnd(double voltage);
-    int trigger(void);
     void multimeterAction();
     void broadcastStats(bool CH2);
     void frameActionGeneric(char CH1_mode, char CH2_mode);
+    void triggerStateChanged();
     //Variables that are just pointers to other classes/vars
-    QCustomPlot *axes;
-    short *readData375_CH1, *readData375_CH2, *readData750;
+    QCustomPlot *axes; // TODO: move into DisplayControl
+	std::unique_ptr<short[]> readData375_CH1;
+	std::unique_ptr<short[]> readData375_CH2;
+	std::unique_ptr<short[]> readData750;
     float *readDataFile;
     char *isoTemp = NULL;
     short *isoTemp_short = NULL;
-    siprint *v0, *v1, *dv, *t0, *t1, *dt, *f;
+    siprint *v0;
+    siprint *v1;
+    siprint *dv;
+    siprint *t0;
+    siprint *t1;
+    siprint *dt;
+    siprint *f;
     //Scope/MM++ related variables
-    double currentVmax, currentVmin, currentVRMS;
-    double triggerLevel = 0;
-    enum triggerType_enum {rising_ch1 = 0, falling_ch1 = 1, rising_ch2 = 2, falling_ch2 = 3};
-    triggerType_enum triggerType = rising_ch1;
+    double currentVmax;
+    double currentVmin;
+    double currentVRMS;
     double multi = 0;
-    int triggerCountSeeking = 0, triggerCountNotSeeking = 0;
-    unsigned char triggerWaiting = 0;
-    double xmin = 20, xmax = -20, ymin = 20, ymax = -20;
+    double xmin = 20;
+    double xmax = -20;
+    double ymin = 20;
+    double ymax = -20;
     double estimated_resistance = 0;
     int multimeterRsource = 0;
+    int triggerMode = 0;
+    double m_offset_CH1 = 0;
+    double m_offset_CH2 = 0;
+    double m_attenuation_CH1 = 1;
+    double m_attenuation_CH2 = 1;
     //Pure MM++ related variables
     enum multimeterType_enum {V = 0, I = 1, R = 2, C = 3};
     multimeterType_enum multimeterType = V;
     double seriesResistance = 0;
+    // Logic Analyser
+    unsigned char serialType = 0;
+    i2c::i2cDecoder* twoWire = nullptr;
+    bool twoWireStateInvalid = true;
     //Generic Vars
-    double windowAtPause = 0.01;
-    QTimer* isoTimer = NULL, *slowTimer = NULL, *fileTimer = NULL;
+    QTimer* isoTimer = NULL;
+    QTimer *slowTimer = NULL;
+    QTimer *fileTimer = NULL;
     long total_read = 0;
     unsigned int length;
     QFile *snapshotFile_CH1;
     QFile *snapshotFile_CH2;
+    uint8_t deviceMode_prev;
     //DAQ
     double daqLoad_startTime, daqLoad_endTime;
 
@@ -148,8 +212,12 @@ signals:
     void multimeterREnabled(int source);
     void mainWindowPleaseDisableSerial(int);
     void showRealtimeButton(bool visible);
+    void topRangeUpdated(double);
+    void botRangeUpdated(double);
+    void timeWindowUpdated(double);
+    void delayUpdated(double);
+    void enableCursorGroup(bool);
 public slots:
-    void setWindow(int newWindow);
     void setVoltageRange(QWheelEvent *event);
     void timerTick(void);
     void pauseEnable_CH1(bool enabled);
@@ -205,6 +273,14 @@ public slots:
     void fileTimerTick();
     void enableFileMode();
     void disableFileMode();
+	void hideCH1(bool enable);
+	void hideCH2(bool enable);
+    void offsetChanged_CH1(double newOffset);
+    void offsetChanged_CH2(double newOffset);
+    void attenuationChanged_CH1(int attenuationIndex);
+    void attenuationChanged_CH2(int attenuationIndex);
+    void setHexDisplay_CH1(bool enabled);
+    void setHexDisplay_CH2(bool enabled);
 };
 
 #endif // ISODRIVER_H

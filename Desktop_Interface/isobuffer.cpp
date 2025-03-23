@@ -1,190 +1,137 @@
 #include "isobuffer.h"
-#include "isodriver.h"
 
+#include <algorithm>
+#include <cassert>
+
+#include "isodriver.h"
 #include "uartstyledecoder.h"
 
-isoBuffer::isoBuffer(QWidget *parent, int bufferLen, isoDriver *caller, unsigned char channel_value) : QWidget(parent)
+namespace
 {
-    buffer = (short *) calloc(bufferLen*2, sizeof(short));
-    bufferEnd = bufferLen-1;
-    samplesPerSecond = (double) bufferLen/(double)21;
-    samplesPerSecond = samplesPerSecond/375*VALID_DATA_PER_375;
-    sampleRate_bit = samplesPerSecond * 8;
-    virtualParent = caller;
-    channel = channel_value;
+constexpr char const* fileHeaderFormat =
+    "EspoTek Labrador DAQ V1.0 Output File\n"
+    "Averaging = %d\n"
+    "Mode = %d\n";
+
+constexpr auto kSamplesSeekingCap = 20;
+
+#ifdef INVERT_MM
+constexpr auto fX0Comp = std::greater<int> {};
+constexpr auto fX1X2Comp = std::less<int> {};
+#else
+constexpr auto fX0Comp = std::less<int> {};
+constexpr auto fX1X2Comp = std::greater<int> {};
+#endif
+
+constexpr auto kTopMultimeter = 2048;
+constexpr double kTriggerSensitivityMultiplier = 4;
 }
-void isoBuffer::openFile(QString newFile)
+
+isoBuffer::isoBuffer(QWidget* parent, int bufferLen, isoDriver* caller, unsigned char channel_value)
+    : QWidget(parent)
+    , m_channel(channel_value)
+    , m_bufferPtr(std::make_unique<short[]>(bufferLen*2))
+    , m_bufferLen(bufferLen)
+    , m_samplesPerSecond(bufferLen/21.0/375*VALID_DATA_PER_375)
+    , m_sampleRate_bit(bufferLen/21.0/375*VALID_DATA_PER_375*8)
+    , m_virtualParent(caller)
 {
-    if (fptr != NULL){
-        fclose(fptr);
+    m_buffer = m_bufferPtr.get();
+}
+
+void isoBuffer::insertIntoBuffer(short item)
+{
+    m_buffer[m_back] = item;
+    m_buffer[m_back+m_bufferLen] = item;
+    m_back++;
+    m_insertedCount++;
+
+    if (m_insertedCount > m_bufferLen)
+    {
+        m_insertedCount = m_bufferLen;
     }
-    if (newFile.isEmpty()){
-        fptr = NULL;
+
+    if (m_back == m_bufferLen)
+    {
+        m_back = 0;
     }
-    else {
-        QByteArray temp = newFile.toLatin1();
-        char *fileName = temp.data();
-        fptr = fopen(fileName, "w");
-        if (fptr == NULL) qFatal("Null fptr in isoBuffer::openFile");
-        qDebug() << "opening file" << fileName;
-        qDebug() << "fptr = " << fptr;
+
+    checkTriggered();
+}
+
+short isoBuffer::bufferAt(uint32_t idx) const
+{
+    if (idx > m_insertedCount)
+        qFatal("isoBuffer::bufferAt: invalid query, idx = %lu, m_insertedCount = %lu", idx, m_insertedCount);
+
+    return m_buffer[(m_back-1) + m_bufferLen - idx];
+}
+
+template<typename T, typename Function>
+void isoBuffer::writeBuffer(T* data, int len, int TOP, Function transform)
+{
+    for (int i = 0; i < len; ++i)
+    {
+        insertIntoBuffer(transform(data[i]));
+    }
+
+    // Output to CSV
+    if (m_fileIOEnabled)
+    {
+        bool isUsingAC = m_channel == 1
+                         ? m_virtualParent->AC_CH1
+                         : m_virtualParent->AC_CH2;
+
+        for (int i = 0; i < len && m_fileIOEnabled; i++)
+        {
+            double convertedSample = sampleConvert(data[i], TOP, isUsingAC);
+
+            maybeOutputSampleToFile(convertedSample);
+        }
     }
 }
 
 void isoBuffer::writeBuffer_char(char* data, int len)
 {
-    double convertedSample;
-    for (int i=0; i<len;i++){
-        //qDebug() << "i = " << i;
-        buffer[back] = (short) data[i];
-        if (back == bufferEnd){
-            back = 0;
-            firstTime = false;
-        }
-        else back++;
-
-        //Output to CSV
-        if(fileIOEnabled){
-            //Current sample
-            convertedSample = sampleConvert(data[i], 128, channel==1 ? virtualParent->AC_CH1 : virtualParent->AC_CH2);
-
-            //Accumulate
-            average_sample_temp += convertedSample;
-            fileIO_sampleCount++;
-            //Check to see if we can write a new sample to file
-            if(fileIO_sampleCount == fileIO_maxIncrementedSampleValue){
-                char numStr[32];
-                sprintf(numStr,"%7.5f, ", average_sample_temp/((double)fileIO_maxIncrementedSampleValue));
-                currentFile->write(numStr);
-                currentColumn++;
-                if (currentColumn >= COLUMN_BREAK){
-                    currentFile->write("\n");
-                    currentColumn = 0;
-                }
-
-                //Reset the average and sample count for next data point
-                fileIO_sampleCount = 0;
-                average_sample_temp = 0;
-
-                //Check to see if we've reached the max file size.
-                if(fileIO_max_file_size != 0){ //value of 0 means "no limit"
-                    fileIO_numBytesWritten += 9;  //7 chars for the number, 1 for the comma and 1 for the space = 9 bytes per sample.
-                    if(fileIO_numBytesWritten >= fileIO_max_file_size){
-                        fileIOEnabled = false; //Just in case signalling fails.
-                        fileIOinternalDisable();
-                    }
-                }
-            }
-        }
-    }
-    return;
+    writeBuffer(data, len, 128, [](char item) -> short {return item;});
 }
 
 void isoBuffer::writeBuffer_short(short* data, int len)
 {
-    //for (int i=(len-1);i>-1;i--){
-    for (int i=0; i<len;i++){
-        //qDebug() << "i = " << i;
-        buffer[back] = (short) data[i] >> 4; //Because it's a left adjust value!
-        if (back == bufferEnd){
-            back = 0;
-            firstTime = false;
-        }
-        else back++;
-
-
-        double convertedSample;
-        //Output to CSV
-        if(fileIOEnabled){
-            //Current sample
-            convertedSample = sampleConvert((data[i] >> 4), 2048, channel==1 ? virtualParent->AC_CH1 : virtualParent->AC_CH2);
-
-            //Accumulate
-            average_sample_temp += convertedSample;
-            fileIO_sampleCount++;
-            //Check to see if we can write a new sample to file
-            if(fileIO_sampleCount == fileIO_maxIncrementedSampleValue){
-                char numStr[32];
-                sprintf(numStr,"%7.5f, ", average_sample_temp/((double)fileIO_maxIncrementedSampleValue));
-                currentFile->write(numStr);
-                currentColumn++;
-                if (currentColumn >= COLUMN_BREAK){
-                    currentFile->write("\n");
-                    currentColumn = 0;
-                }
-
-                //Reset the average and sample count for next data point
-                fileIO_sampleCount = 0;
-                average_sample_temp = 0;
-
-                //Check to see if we've reached the max file size.
-                if(fileIO_max_file_size != 0){ //value of 0 means "no limit"
-                    fileIO_numBytesWritten += 9;  //7 chars for the number, 1 for the comma and 1 for the space = 9 bytes per sample.
-                    if(fileIO_numBytesWritten >= fileIO_max_file_size){
-                        fileIOEnabled = false; //Just in case signalling fails.
-                        fileIOinternalDisable();
-                    }
-                }
-            }
-        }
-    }
-    return;
+    writeBuffer(data, len, 2048, [](short item) -> short {return item >> 4;});
 }
 
-
-short *isoBuffer::readBuffer(double sampleWindow, int numSamples, bool singleBit, double delayOffset)
+std::unique_ptr<short[]> isoBuffer::readBuffer(double sampleWindow, int numSamples, bool singleBit, double delayOffset)
 {
-    //ignore singleBit for now
-    double timeBetweenSamples = (double) sampleWindow * (double) samplesPerSecond / (double) numSamples;
-    double accumulatedDelay = 0;
-    int delaySamples = (int)((double)delayOffset * (double)samplesPerSecond);
+    /*
+     * The expected behavior is to run backwards over the buffer with a stride
+     * of timeBetweenSamples steps, and push the touched elements into readData.
+     * If more elements are requested than how many are stored (1), the buffer
+     * will be populated only partially. Modifying this function to return null
+     * or a zero-filled buffer instead should be simple enough.
+     *
+     * (1) m_insertedCount < (delayOffset + sampleWindow) * m_samplesPerSecond
+     */
+    const double timeBetweenSamples = sampleWindow * m_samplesPerSecond / numSamples;
+    const int delaySamples = delayOffset * m_samplesPerSecond;
 
-    int front = back - 1 - delaySamples;
-    if (front < 0) front = 0;
-    int idx, subIdx;
-    if(readData!=NULL) free(readData);
-    readData = (short *) calloc(numSamples, sizeof(short));
+    std::unique_ptr<short[]> readData = std::make_unique<short[]>(numSamples);
 
-    if(singleBit){
-        for (int i=0; i<numSamples;i++){
-            if (timeBetweenSamples > (double) front){
-                accumulatedDelay -= (double) front;
-                front = bufferEnd;
-            }
+    std::fill (readData.get(), readData.get() + numSamples, short(0));
 
-            idx = (int) floor(((double) front - accumulatedDelay));
-            subIdx = (int) floor(8*(((double) front - accumulatedDelay) - floor(((double) front - accumulatedDelay))));
+    double itr = delaySamples;
+    for (int i = 0; i < numSamples && itr < m_insertedCount; i++)
+    {
+        assert(int(itr) >= 0);
+        readData[i] = bufferAt(int(itr));
 
-            //qDebug() << "subIdx = " << subIdx;
-
-            if (idx < 0){
-                accumulatedDelay--;
-                accumulatedDelay -= (double) front;
-                front = bufferEnd;
-                idx = (int) round(((double) front - accumulatedDelay));
-            }
-            readData[i] = buffer[idx] & (1<<subIdx);
-
-            accumulatedDelay += timeBetweenSamples;
+        if (singleBit)
+        {
+            int subIdx = 8*(-itr-floor(-itr));
+            readData[i] &= (1 << subIdx);
         }
-    }else{
-        for (int i=0; i<numSamples;i++){
-            if (timeBetweenSamples > (double) front){
-                accumulatedDelay -= (double) front;
-                front = bufferEnd;
-            }
 
-            idx = (int) round(((double) front - accumulatedDelay));
-            if (idx < 0){
-                accumulatedDelay--;
-                accumulatedDelay -= (double) front;
-                front = bufferEnd;
-                idx = (int) round(((double) front - accumulatedDelay));
-            }
-            readData[i] = buffer[idx];
-
-            accumulatedDelay += timeBetweenSamples;
-        }
+        itr += timeBetweenSamples;
     }
 
     return readData;
@@ -192,206 +139,305 @@ short *isoBuffer::readBuffer(double sampleWindow, int numSamples, bool singleBit
 
 void isoBuffer::clearBuffer()
 {
-    for (int i=0; i<bufferEnd;i++){
-        buffer[i] = 0;
+    for (uint32_t i = 0; i < m_bufferLen; i++)
+    {
+        m_buffer[i] = 0;
+        m_buffer[i + m_bufferLen] = 0;
     }
 
-    back = 0;
-    //serialPtr = 0;
-    //serialDecodingSymbol = false;
-    //symbolCurrent = 0;
-    //symbol = 0;
-
-    firstTime = true;
+    m_back = 0;
+    m_insertedCount = 0;
 }
 
 void isoBuffer::gainBuffer(int gain_log)
 {
     qDebug() << "Buffer shifted by" << gain_log;
-    for (int i=0; i<bufferEnd; i++){
-        if (gain_log == -1) buffer[i] *= 2;
-        else buffer[i] /= 2;
+    for (uint32_t i = 0; i < m_bufferLen; i++)
+    {
+        if (gain_log < 0)
+        {
+            m_buffer[i] <<= -gain_log;
+            m_buffer[i+m_bufferLen] <<= -gain_log;
+        }
+        else
+        {
+            m_buffer[i] >>= gain_log;
+            m_buffer[i+m_bufferLen] >>= gain_log;
+        }
     }
 }
 
 
-void isoBuffer::glitchInsert(short type)
+void isoBuffer::outputSampleToFile(double averageSample)
+{
+    char numStr[32];
+    sprintf(numStr,"%7.5f, ", averageSample);
+
+    m_currentFile->write(numStr);
+    m_currentColumn++;
+
+    if (m_currentColumn == COLUMN_BREAK)
+    {
+        m_currentFile->write("\n");
+        m_currentColumn = 0;
+    }
+}
+
+void isoBuffer::maybeOutputSampleToFile(double convertedSample)
+{
+    /*
+     * This function adds a sample to an accumulator and bumps a sample count.
+     * After the sample count hits some threshold the samples are averaged
+     * and the average is written to a file.
+     * If this makes us hit the max. file size, then fileIO is disabled.
+     */
+
+    m_fileIO_sampleAccumulator += convertedSample;
+    m_fileIO_sampleCount++;
+
+    if (m_fileIO_sampleCount == m_fileIO_sampleCountPerWrite)
+    {
+        double averageSample = m_fileIO_sampleAccumulator / m_fileIO_sampleCount;
+        outputSampleToFile(averageSample);
+
+        // Reset the accumulator and sample count for next data point.
+        m_fileIO_sampleAccumulator = 0;
+        m_fileIO_sampleCount = 0;
+
+        // value of 0 means "no limit", meaning we must skip the check by returning.
+        if (m_fileIO_maxFileSize == 0)
+            return;
+
+        // 7 chars(number) + 1 char(comma) + 1 char(space) = 9 bytes/sample.
+        m_fileIO_numBytesWritten += 9;
+        if (m_fileIO_numBytesWritten >= m_fileIO_maxFileSize)
+        {
+            m_fileIOEnabled = false; // Just in case signalling fails.
+            fileIOinternalDisable();
+        }
+    }
+}
+
+void isoBuffer::enableFileIO(QFile* file, int samplesToAverage, qulonglong max_file_size)
 {
 
-}
-
-void isoBuffer::enableFileIO(QFile *file, int samplesToAverage, qulonglong max_file_size){
-
-    //Open the file
+    // Open the file
     file->open(QIODevice::WriteOnly);
-    currentFile = file;
+    m_currentFile = file;
 
-    //Add the header
+    // Add the header
     char headerLine[256];
-    sprintf(headerLine, "EspoTek Labrador DAQ V1.0 Output File\nAveraging = %d\nMode = %d\n", samplesToAverage, virtualParent->driver->deviceMode);
-    currentFile->write(headerLine);
+    sprintf(headerLine, fileHeaderFormat, samplesToAverage, m_virtualParent->driver->deviceMode);
+    m_currentFile->write(headerLine);
 
-    //Set up the isoBuffer for DAQ
-    fileIO_maxIncrementedSampleValue = samplesToAverage;
-    fileIO_max_file_size = max_file_size;
-    fileIO_sampleCount = 0;
-    fileIO_numBytesWritten = 0;
-    average_sample_temp = 0;
+    // Set up the isoBuffer for DAQ
+    m_fileIO_maxFileSize = max_file_size;
+    m_fileIO_sampleCountPerWrite = samplesToAverage;
+    m_fileIO_sampleCount = 0;
+    m_fileIO_sampleAccumulator = 0;
+    m_fileIO_numBytesWritten = 0;
 
-    //Enable DAQ
-    fileIOEnabled = true;
+    // Enable DAQ
+    m_fileIOEnabled = true;
 
-    qDebug("File IO enabled, averaging %d samples, max file size %uMB", samplesToAverage, max_file_size/1000000);
+    qDebug("File IO enabled, averaging %d samples, max file size %lluMB", samplesToAverage, max_file_size/1000000);
     qDebug() << max_file_size;
+}
+
+void isoBuffer::disableFileIO()
+{
+    m_fileIOEnabled = false;
+    m_currentColumn = 0;
+    m_currentFile->close();
     return;
 }
 
-void isoBuffer::disableFileIO(){
-    fileIOEnabled = false;
-    currentColumn = 0;
-    currentFile->close();
-    return;
-}
 
-double isoBuffer::sampleConvert(short sample, int TOP, bool AC){
+double isoBuffer::sampleConvert(short sample, int TOP, bool AC) const
+{
+    double scope_gain = (double)(m_virtualParent->driver->scopeGain);
 
-    double scope_gain = (double)(virtualParent->driver->scopeGain);
-    double voltageLevel;
+    double voltageLevel = (sample * (vcc/2)) / (m_frontendGain*scope_gain*TOP);
+    if (m_virtualParent->driver->deviceMode != 7) voltageLevel += m_voltage_ref;
+#ifdef INVERT_MM
+    if (m_virtualParent->driver->deviceMode == 7) voltageLevel *= -1;
+#endif
 
-    voltageLevel = (sample * (vcc/2)) / (frontendGain*scope_gain*TOP);
-    if (virtualParent->driver->deviceMode != 7) voltageLevel += voltage_ref;
-    #ifdef INVERT_MM
-        if(virtualParent->driver->deviceMode == 7) voltageLevel *= -1;
-    #endif
-
-    if(AC){
-        voltageLevel -= virtualParent->currentVmean; //This is old (1 frame in past) value and might not be good for signals with large variations in DC level (although the cap should filter that anyway)??
+    if (AC)
+    {
+        // This is old (1 frame in past) value and might not be good for signals with
+        // large variations in DC level (although the cap should filter that anyway)??
+        voltageLevel -= m_virtualParent->currentVmean;
     }
     return voltageLevel;
 }
 
+short isoBuffer::inverseSampleConvert(double voltageLevel, int TOP, bool AC) const
+{
+    double scope_gain = m_virtualParent->driver->scopeGain;
 
-
-short isoBuffer::inverseSampleConvert(double voltageLevel, int TOP, bool AC){
-
-    double scope_gain = (double)(virtualParent->driver->scopeGain);
-    short sample;
-
-    if(AC){
-        voltageLevel += virtualParent->currentVmean; //This is old (1 frame in past) value and might not be good for signals with large variations in DC level (although the cap should filter that anyway)??
+    if (AC)
+    {
+        // This is old (1 frame in past) value and might not be good for signals with
+        // large variations in DC level (although the cap should filter that anyway)??
+        voltageLevel += m_virtualParent->currentVmean;
     }
-#ifdef INVERT_MM
-    if(virtualParent->driver->deviceMode == 7) voltageLevel *= -1;
-#endif
-    if (virtualParent->driver->deviceMode != 7) voltageLevel -= voltage_ref;
 
-    //voltageLevel = (sample * (vcc/2)) / (frontendGain*scope_gain*TOP);
-    sample = (voltageLevel * (frontendGain*scope_gain*TOP))/(vcc/2);
+#ifdef INVERT_MM
+    if (m_virtualParent->driver->deviceMode == 7) voltageLevel *= -1;
+#endif
+    if (m_virtualParent->driver->deviceMode != 7) voltageLevel -= m_voltage_ref;
+
+    // voltageLevel = (sample * (vcc/2)) / (frontendGain*scope_gain*TOP);
+    short sample = (voltageLevel * (m_frontendGain*scope_gain*TOP))/(vcc/2);
     return sample;
 }
 
-#define NUM_SAMPLES_SEEKING_CAP (20)
+// For capacitance measurement.
+// x0, x1 and x2 are all various time points used to find the RC coefficient.
+template<typename Function>
+int isoBuffer::capSample(int offset, int target, double seconds, double value, Function comp)
+{
+    int samples = seconds * m_samplesPerSecond;
 
-#ifdef INVERT_MM
-    #define X0_COMPARISON_CAP >
-    #define X1_X2_COMPARISON_CAP <
-#else
-    #define X0_COMPARISON_CAP <
-    #define X1_X2_COMPARISON_CAP >
-#endif
+    if (static_cast<int32_t>(m_back) < (samples + offset))
+        return -1;
 
-//For capacitance measurement.  x0, x1 and x2 are all various time points used to find the RC coefficient.
-int isoBuffer::cap_x0fromLast(double seconds, double vbot){
-    int samplesInPast = seconds * samplesPerSecond;
-    if(back < samplesInPast){
-        return -1; //too hard, not really important
+    short sample = inverseSampleConvert(value, 2048, 0);
+
+    int found = 0;
+    for (int i = samples + offset; i--;)
+    {
+        short currentSample = bufferAt(i);
+        if (comp(currentSample, sample))
+            found = found + 1;
+        else
+            found = std::max(0, found-1);
+
+        if (found > target)
+            return samples - i;
     }
-    short vbot_s = inverseSampleConvert(vbot, 2048, 0);
-    qDebug() << "vbot_s (x0) = " << vbot_s;
 
-    int num_found = 0;
-    for(int i=samplesInPast; i; i--){
-        short currentSample = buffer[back - i];
-        if(currentSample X0_COMPARISON_CAP vbot_s){
-            num_found++;
-        } else num_found--;
-        if(num_found < 0){
-            num_found = 0;
-        }
-        if (num_found > NUM_SAMPLES_SEEKING_CAP){
-            return samplesInPast-i;
-        }
-    }
     return -1;
 }
 
-int isoBuffer::cap_x1fromLast(double seconds, int x0, double vbot){
-    int samplesInPast = seconds * samplesPerSecond;
-    samplesInPast -= x0;
-    if(back < samplesInPast){
-        return -1; //too hard, not really important
-    }
-    short vbot_s = inverseSampleConvert(vbot, 2048, 0);
-    qDebug() << "vbot_s (x1) = " << vbot_s;
-
-    int num_found = 0;
-    for(int i=samplesInPast; i; i--){
-        short currentSample = buffer[back - i];
-        if(currentSample X1_X2_COMPARISON_CAP vbot_s){
-            num_found++;
-        } else num_found--;
-        if(num_found < 0){
-            num_found = 0;
-        }
-        if (num_found > NUM_SAMPLES_SEEKING_CAP){
-            return samplesInPast-i + x0;
-        }
-
-    }
-    return -1;
+int isoBuffer::cap_x0fromLast(double seconds, double vbot)
+{
+    return capSample(0, kSamplesSeekingCap, seconds, vbot, fX0Comp);
 }
 
-int isoBuffer::cap_x2fromLast(double seconds, int x1, double vtop){
-    int samplesInPast = seconds * samplesPerSecond;
-    samplesInPast -= x1;
-    if(back < samplesInPast){
-        return -1; //too hard, not really important
-    }
-    short vtop_s = inverseSampleConvert(vtop, 2048, 0);
-    qDebug() << "vtop_s (x2) = " << vtop_s;
-
-    int num_found = 0;
-    for(int i=samplesInPast; i; i--){
-        short currentSample = buffer[back - i];
-        if(currentSample X1_X2_COMPARISON_CAP vtop_s){
-            num_found++;
-        } else num_found--;
-        if(num_found < 0){
-            num_found = 0;
-        }
-        if (num_found > NUM_SAMPLES_SEEKING_CAP){
-            return samplesInPast-i + x1;
-        }
-    }
-    return -1;
+int isoBuffer::cap_x1fromLast(double seconds, int x0, double vbot)
+{
+    return capSample(-x0, kSamplesSeekingCap, seconds, vbot, fX1X2Comp);
 }
 
-void isoBuffer::serialManage(double baudRate, int type){
-    //Types:
-    // 0 - standard UART, no parity
-    // 1 - standard UART, with parity bit
-    // 100 - I2C
-    if(decoder == NULL){
-        decoder = new uartStyleDecoder(this);
-        connect(decoder, SIGNAL(wireDisconnected(int)), virtualParent, SLOT(serialNeedsDisabling(int)));
-    }
-    if(stopDecoding){
-        decoder->updateTimer->start(CONSOLE_UPDATE_TIMER_PERIOD);
-        stopDecoding = false;
-    }
-    decoder->serialDecode(baudRate);
+int isoBuffer::cap_x2fromLast(double seconds, int x1, double vtop)
+{
+    return capSample(-x1, kSamplesSeekingCap, seconds, vtop, fX1X2Comp);
 }
 
+void isoBuffer::serialManage(double baudRate, UartParity parity, bool hexDisplay)
+{
+    if (m_decoder == NULL)
+    {
+        m_decoder = new uartStyleDecoder(baudRate, this);
+    }
+    if (!m_isDecoding)
+    {
+        m_decoder->m_updateTimer.start(CONSOLE_UPDATE_TIMER_PERIOD);
+        m_isDecoding = true;
+    }
 
+	m_decoder->m_baudRate = baudRate;
+    m_decoder->setParityMode(parity);
+    m_decoder->setHexDisplay(hexDisplay);
+    m_decoder->serialDecode();
+}
 
+void isoBuffer::setTriggerType(TriggerType newType)
+{
+    qDebug() << "Trigger Type: " << (uint8_t)newType;
+    m_triggerType = newType;
+}
 
+void isoBuffer::setTriggerLevel(double voltageLevel, uint16_t top, bool acCoupled)
+{
+    m_triggerLevel = inverseSampleConvert(voltageLevel, top, acCoupled);
+    m_triggerSensitivity = static_cast<short>(1 + abs(voltageLevel * kTriggerSensitivityMultiplier * static_cast<double>(top) / 128.));
+    qDebug() << "Trigger Level: " << m_triggerLevel;
+    qDebug() << "Trigger sensitivity:" << m_triggerSensitivity;
+}
+
+// TODO: Clear trigger
+// FIXME: AC changes will not be reflected here
+void isoBuffer::checkTriggered()
+{
+    if (m_triggerType == TriggerType::Disabled)
+        return;
+
+    if ((bufferAt(0) >= (m_triggerLevel + m_triggerSensitivity)) && (m_triggerSeekState == TriggerSeekState::BelowTriggerLevel))
+    {
+        // Rising Edge
+        m_triggerSeekState = TriggerSeekState::AboveTriggerLevel;
+        if (m_triggerType == TriggerType::Rising)
+            m_triggerPositionList.push_back(m_back - 1);
+    }
+    else if ((bufferAt(0) < (m_triggerLevel - m_triggerSensitivity)) && (m_triggerSeekState == TriggerSeekState::AboveTriggerLevel))
+    {
+        // Falling Edge
+        m_triggerSeekState = TriggerSeekState::BelowTriggerLevel;
+        if (m_triggerType == TriggerType::Falling)
+            m_triggerPositionList.push_back(m_back - 1);
+    }
+}
+
+double isoBuffer::getDelayedTriggerPoint(double delay)
+{
+    if (m_triggerPositionList.size() == 0)
+        return 0;
+	
+    const uint32_t delaySamples = delay * m_samplesPerSecond;
+
+    auto isValid = [=](uint32_t index)->bool
+    {
+        if (m_back > delaySamples)
+            return (index < m_back - delaySamples) || (index >= m_back);
+        else
+            return (index < m_bufferLen + m_back - delaySamples) && (index >= m_back);
+    };
+
+    auto getDelay = [=](uint32_t index)->double
+    {
+        if (m_back > index)
+            return (m_back - index) / static_cast<double>(m_samplesPerSecond);
+        else
+            return (m_bufferLen + (m_back-1) - index) / static_cast<double>(m_samplesPerSecond);
+    };
+
+    // Like std::find_if but returns the last element matching the predicate instead of the first one
+    // TODO: Move this elsewhere (maybe a utils / algorithms file??)
+    // requires first and last to be Bidirectional iters, and form a valid range
+    // requires p to be a valid unaryPredicate
+    // Full signature would be:
+    // template<typename It, typename Predicate>
+    // It find_last_if(It begin, It end, Predicate p)
+    auto find_last_if = [](auto begin, auto end, auto p)
+    {
+        using It = decltype(begin); // TODO: remove this line once this is a proper function
+        std::reverse_iterator<It> rlast(begin), rfirst(end);
+        auto found = std::find_if(rfirst, rlast, p);
+        return found == rlast
+               ? end
+               : std::prev(found.base());
+    };
+
+    auto it = find_last_if(m_triggerPositionList.begin(), m_triggerPositionList.end(), isValid);
+    if (it != m_triggerPositionList.end())
+    {
+        // NOTE: vector::erase does not remove the element pointed to by the second iterator.
+        m_triggerPositionList.erase(m_triggerPositionList.begin(), it);
+        return getDelay(m_triggerPositionList[0]);
+    }
+
+    return 0;
+}

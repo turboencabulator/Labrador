@@ -1,11 +1,39 @@
 #include "mainwindow.h"
 #include "uartstyledecoder.h"
 #include "daqform.h"
+#include <QDesktopServices>
+#include "espospinbox.h"
+
+#include <algorithm>
+
+#define DO_QUOTE(X) #X
+#define QUOTE(X) DO_QUOTE(X)
+
+#ifndef GIT_HASH_SHORT
+#define GIT_HASH_SHORT 0000000
+#endif
+
+namespace
+{
+   constexpr uint32_t MAX_CONSOLE_BLOCK_COUNT = 512;
+   constexpr char kDocumentationUrl[] = "https://github.com/EspoTek/Labrador/wiki";
+   constexpr char kPinoutUrl[] = "https://github.com/EspoTek/Labrador/wiki/Pinout";
+   constexpr char kAboutString[] = "<h4>EspoTek Labrador</h4>"
+                                   "Continuous Release<br>"\
+                                   "Git hash: <a href='https://github.com/EspoTek/Labrador/commits/" QUOTE(GIT_HASH_SHORT) "'>" QUOTE(GIT_HASH_SHORT) "</a><br>"\
+                                   "Website: <a href='http://espotek.com'>https://espotek.com</a><br>"\
+                                   "Contact email: <a href='mailto:admin@espotek.com'>admin@espotek.com</a>";
+   constexpr char kOrganisationName[] = "EspoTek";
+   constexpr char kApplicationName[] = "Labrador";
+}
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    QCoreApplication::setOrganizationName(kOrganisationName);
+    QCoreApplication::setApplicationName(kApplicationName);
+
     ui->setupUi(this);
 
     calibrationMessages = new QMessageBox();
@@ -36,17 +64,34 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->voltageInfoRmsDisplay_CH1->display(6.00);
     connectDisplaySignals();
 
-    ui->controller_iso->internalBuffer375_CH1->console1 = ui->console1;
-    ui->controller_iso->internalBuffer375_CH1->console2 = ui->console2;
+    ui->controller_iso->internalBuffer375_CH1->m_console1 = ui->console1;
+    ui->controller_iso->internalBuffer375_CH1->m_console2 = ui->console2;
 
-    ui->controller_iso->internalBuffer375_CH2->console1 = ui->console1;
-    ui->controller_iso->internalBuffer375_CH2->console2 = ui->console2;
+    ui->controller_iso->internalBuffer375_CH2->m_console1 = ui->console1;
+    ui->controller_iso->internalBuffer375_CH2->m_console2 = ui->console2;
     initShortcuts();
 
     ui->debugButton1->setVisible(0);
     ui->debugButton2->setVisible(0);
     ui->debugButton3->setVisible(0);
     ui->debugConsole->setVisible(0);
+
+//    // Set the consoles to be resizeable
+//    for (const auto & console : {ui->console1, ui->console2})
+//    {
+//        console->setWindowFlags(Qt::SubWindow);
+//        QSizeGrip* sizeGrip = new QSizeGrip(console);
+//        QGridLayout* layout = new QGridLayout(console);
+//        layout->addWidget(sizeGrip, 0,0,1,1,Qt::AlignBottom | Qt::AlignLeft);
+//    }
+
+    for (const auto & console : {ui->console1, ui->console2})
+    {
+        QFont font("Monospace");
+        font.setStyleHint(QFont::Monospace);
+        console->setFont(font);
+    }
+
 #ifndef PLATFORM_ANDROID
     ui->kickstartIsoButton->setVisible(0);
     ui->console1->setVisible(0);
@@ -101,8 +146,12 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(ui->debugButton1, SIGNAL(clicked()), ui->controller_iso->driver, SLOT(avrDebug()));
         connect(ui->psuSlider, SIGNAL(voltageChanged(double)), ui->controller_iso->driver, SLOT(setPsu(double)));
         connect(ui->controller_iso, SIGNAL(setGain(double)), ui->controller_iso->driver, SLOT(setGain(double)));
-        connect(ui->controller_fg, SIGNAL(functionGenToUpdate(int,functionGenControl*)), ui->controller_iso->driver, SLOT(setFunctionGen(int,functionGenControl*)));
+        connect(ui->controller_fg, &functionGenControl::functionGenToUpdate, ui->controller_iso->driver, &genericUsbDriver::setFunctionGen);
         connect(ui->bufferDisplay, SIGNAL(modeChange(int)), ui->controller_iso->driver, SLOT(setDeviceMode(int)));
+		connect(ui->bufferDisplay, &bufferControl::modeChange, this, [this](){
+			// Force a trigger refresh
+			ui->controller_iso->setTriggerLevel(ui->triggerLevelValue->value());	
+		});
         connect(ui->bufferDisplay, SIGNAL(updateDig(int)), ui->controller_iso->driver, SLOT(newDig(int)));
 
         //Set the settings again!
@@ -130,8 +179,8 @@ MainWindow::MainWindow(QWidget *parent) :
     #endif
 
     connect(ui->controller_iso->driver, SIGNAL(killMe()), this, SLOT(reinitUsb()));
-    //ui->console1->setMaximumBlockCount(MAX_CONSOLE_BLOCK_COUNT);
-    //ui->console2->setMaximumBlockCount(MAX_CONSOLE_BLOCK_COUNT);
+    ui->console1->setMaximumBlockCount(MAX_CONSOLE_BLOCK_COUNT);
+    ui->console2->setMaximumBlockCount(MAX_CONSOLE_BLOCK_COUNT);
     //ui->frequencyValue_CH2->setValue(369);
     //ui->amplitudeValue_CH2->setValue(2);
     ui->controller_iso->doNotTouchGraph = false;
@@ -148,7 +197,6 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->controller_iso, SIGNAL(sendVRMS_CH2(double)), ui->voltageInfoRmsDisplay_CH2, SLOT(display(double)));
 
     connect(ui->controller_iso, SIGNAL(mainWindowPleaseDisableSerial(int)), this, SLOT(serialEmergencyDisable(int)));
-    connect(ui->serialDecodingModeSelect_CH1, SIGNAL(currentIndexChanged(int)), this, SLOT(checkForI2C(int)));
 
     connect(ui->controller_iso->driver, SIGNAL(signalFirmwareFlash(void)), ui->deviceConnected, SLOT(flashingFirmware(void)));
     connect(ui->controller_iso->internalBuffer375_CH1, SIGNAL(fileIOinternalDisable()), this, SLOT(fileLimitReached_CH1()));
@@ -158,7 +206,41 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->controller_iso, SIGNAL(showRealtimeButton(bool)), ui->realTimeButton, SLOT(setVisible(bool)));
     connect(ui->realTimeButton, SIGNAL(pressed()), ui->controller_iso, SLOT(disableFileMode()));
 
+
+	
+    connect(ui->pausedLabeL_CH1, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
+    connect(ui->pausedLabel_CH2, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
+    connect(ui->pause_LA, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
+    connect(ui->multimeterPauseCheckBox, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
+
+    connect(ui->hideCH1Box, SIGNAL(toggled(bool)), ui->controller_iso, SLOT(hideCH1(bool)));
+    connect(ui->hideCH2Box, SIGNAL(toggled(bool)), ui->controller_iso, SLOT(hideCH2(bool)));
+
+    connect(ui->actionHexDisplay, &QAction::toggled, ui->controller_iso, &isoDriver::setHexDisplay_CH1);
+    connect(ui->actionHexDisplay_2, &QAction::toggled, ui->controller_iso, &isoDriver::setHexDisplay_CH2);
+
+	ui->hideCH1Box->setVisible(false);
+	ui->hideCH2Box->setVisible(false);
+
     ui->realTimeButton->setVisible(false);
+
+    if ((QApplication::desktop()->availableGeometry().width() < 1520) || (QApplication::desktop()->geometry().height() < 800))
+    {
+        qDebug() << "Low resolution detected:" << QApplication::desktop()->availableGeometry().width() << "x" << QApplication::desktop()->availableGeometry().height();
+        this->setMinimumSize(1280, 700);
+        this->resize(1280, 700);
+    }
+    else
+    {
+        this->setMinimumSize(1520, 800);
+        this->resize(1520, 800);
+    }
+
+    connect(ui->offsetSpinBox_CH1, SIGNAL(valueChanged(double)), ui->controller_iso, SLOT(offsetChanged_CH1(double)));
+    connect(ui->offsetSpinBox_CH2, SIGNAL(valueChanged(double)), ui->controller_iso, SLOT(offsetChanged_CH2(double)));
+    connect(ui->attenuationComboBox_CH1, SIGNAL(currentIndexChanged(int)), ui->controller_iso, SLOT(attenuationChanged_CH1(int)));
+    connect(ui->attenuationComboBox_CH2, SIGNAL(currentIndexChanged(int)), ui->controller_iso, SLOT(attenuationChanged_CH2(int)));
+    connect(ui->controller_iso, &isoDriver::enableCursorGroup, this, &MainWindow::cursorGroupEnabled);
 }
 
 MainWindow::~MainWindow()
@@ -168,6 +250,9 @@ MainWindow::~MainWindow()
 
 void MainWindow::initialisePlot()
 {
+    QCPCurve *xyCurve = new QCPCurve(ui->scopeAxes->xAxis, ui->scopeAxes->yAxis);
+    xyCurve->setPen(QPen(Qt::yellow, 1));
+    ui->scopeAxes->addPlottable(xyCurve);
     ui->scopeAxes->addGraph();
     ui->scopeAxes->addGraph();
     ui->scopeAxes->addGraph();
@@ -231,7 +316,6 @@ void MainWindow::initialisePlot()
 
     ui->scopeAxes->setBackground(Qt::black);
 
-
     ui->scopeAxes->replot();
 }
 
@@ -255,7 +339,8 @@ void MainWindow::resizeEvent(QResizeEvent *event){
     //ui->scopeAxes->resize(ui->scopeAxes->height(), ui->scopeAxes->height());
     //qDebug() << ui->scopeAxes->yAxis->autoTickCount() << ui->scopeAxes->xAxis->autoTickCount();
 
-    if(forceSquare){
+    if(forceSquare)
+    {
         int tempHeight = ui->scopeAxes->height();
         int tempWidth = ui->scopeAxes->width();
         int newDims = (tempHeight > tempWidth) ? tempWidth : tempHeight;
@@ -266,6 +351,13 @@ void MainWindow::resizeEvent(QResizeEvent *event){
             ui->scopeAxes->move(ui->scopeAxes->x(), ui->scopeAxes->y() + (tempHeight - tempWidth) / 2);
         }
     }
+
+    // This prevents the multimeter LCD labels from being differently-sized
+    QRect mmGeometry = ui->gridLayout->geometry();
+    int spacing = ui->gridLayout->spacing();
+    int mmHeight = mmGeometry.height();
+    mmGeometry.setHeight(mmHeight - ((mmHeight - (3 * spacing)) % 4));
+    ui->gridLayout->setGeometry(mmGeometry);
 }
 
 void MainWindow::menuSetup(){
@@ -279,7 +371,7 @@ void MainWindow::menuSetup(){
     gainGroup->addAction(ui->actionGain16);
     gainGroup->addAction(ui->actionGain32);
     gainGroup->addAction(ui->actionGain64);
-    ui->actionGainAuto->setChecked(1);
+    ui->actionGainAuto->setChecked(true);
 
     rangeGroupV = new QActionGroup(this);
     rangeGroupV->addAction(ui->actionAutoV);
@@ -309,6 +401,10 @@ void MainWindow::menuSetup(){
     fpsGroup->addAction(ui->action10FPS);
     fpsGroup->addAction(ui->action5FPS);
 
+    serialProtocolGroup = new QActionGroup(this);
+    serialProtocolGroup->addAction(ui->actionSerial);
+    serialProtocolGroup->addAction(ui->actionI2C);
+
 
     connect(ui->actionAutoV, SIGNAL(toggled(bool)), ui->controller_iso, SLOT(setAutoMultimeterV(bool)));
     connect(ui->actionV, SIGNAL(toggled(bool)), ui->controller_iso, SLOT(setForceVolts(bool)));
@@ -337,7 +433,7 @@ void MainWindow::menuSetup(){
     uartBaudGroup_CH1->addAction(ui->action38400);
     uartBaudGroup_CH1->addAction(ui->action57600);
     uartBaudGroup_CH1->addAction(ui->action115200);
-    ui->action9600->setChecked(1);
+    ui->action9600->setChecked(true);
 
     uartBaudGroup_CH2 = new QActionGroup(this);
     uartBaudGroup_CH2->addAction(ui->action300_2);
@@ -352,13 +448,25 @@ void MainWindow::menuSetup(){
     uartBaudGroup_CH2->addAction(ui->action38400_2);
     uartBaudGroup_CH2->addAction(ui->action57600_2);
     uartBaudGroup_CH2->addAction(ui->action115200_2);
-    ui->action9600_2->setChecked(1);
+    ui->action9600_2->setChecked(true);
+
+    uartParityGroup_CH1 = new QActionGroup(this);
+    uartParityGroup_CH1->addAction(ui->actionNone);
+    uartParityGroup_CH1->addAction(ui->actionEven);
+    uartParityGroup_CH1->addAction(ui->actionOdd);
+    ui->actionNone->setChecked(true);
+
+    uartParityGroup_CH2 = new QActionGroup(this);
+    uartParityGroup_CH2->addAction(ui->actionNone_2);
+    uartParityGroup_CH2->addAction(ui->actionEven_2);
+    uartParityGroup_CH2->addAction(ui->actionOdd_2);
+    ui->actionNone_2->setChecked(true);
 
     connectionTypeGroup = new QActionGroup(this);
     connectionTypeGroup->addAction(ui->actionLo_bw);
     connectionTypeGroup->addAction(ui->actionSingle_ep_msync);
     connectionTypeGroup->addAction(ui->actionSingle_ep_async);
-    ui->actionLo_bw->setChecked(1);
+    ui->actionLo_bw->setChecked(true);
     expected_variant = 1; //for default Lo_bw mode;
 
     ui->actionLo_bw->setVisible(false);
@@ -646,51 +754,51 @@ void MainWindow::cycleBaudRate_CH1(){
     QAction *currentAction = uartBaudGroup_CH1->checkedAction();
     qDebug() << currentAction;
     if(currentAction==ui->action300){
-        ui->action600->setChecked(1);
+        ui->action600->setChecked(true);
         return;
         }
     if(currentAction==ui->action600){
-        ui->action1200->setChecked(1);
+        ui->action1200->setChecked(true);
         return;
         }
     if(currentAction==ui->action1200){
-        ui->action2400->setChecked(1);
+        ui->action2400->setChecked(true);
         return;
         }
     if(currentAction==ui->action2400){
-        ui->action4800->setChecked(1);
+        ui->action4800->setChecked(true);
         return;
         }
     if(currentAction==ui->action4800){
-        ui->action9600->setChecked(1);
+        ui->action9600->setChecked(true);
         return;
         }
     if(currentAction==ui->action9600){
-        ui->action14400->setChecked(1);
+        ui->action14400->setChecked(true);
         return;
         }
     if(currentAction==ui->action14400){
-        ui->action19200->setChecked(1);
+        ui->action19200->setChecked(true);
         return;
         }
     if(currentAction==ui->action19200){
-        ui->action28800->setChecked(1);
+        ui->action28800->setChecked(true);
         return;
         }
     if(currentAction==ui->action28800){
-        ui->action38400->setChecked(1);
+        ui->action38400->setChecked(true);
         return;
         }
     if(currentAction==ui->action38400){
-        ui->action57600->setChecked(1);
+        ui->action57600->setChecked(true);
         return;
         }
     if(currentAction==ui->action57600){
-        ui->action115200->setChecked(1);
+        ui->action115200->setChecked(true);
         return;
         }
     if(currentAction==ui->action115200){
-        ui->action300->setChecked(1);
+        ui->action300->setChecked(true);
         return;
         }
     qFatal("Invalid state in MainWindow::cycleBaudRate_CH1()");
@@ -700,51 +808,51 @@ void MainWindow::cycleBaudRateBackwards_CH1(){
     QAction *currentAction = uartBaudGroup_CH1->checkedAction();
     qDebug() << currentAction;
     if(currentAction==ui->action1200){
-        ui->action600->setChecked(1);
+        ui->action600->setChecked(true);
         return;
         }
     if(currentAction==ui->action2400){
-        ui->action1200->setChecked(1);
+        ui->action1200->setChecked(true);
         return;
         }
     if(currentAction==ui->action4800){
-        ui->action2400->setChecked(1);
+        ui->action2400->setChecked(true);
         return;
         }
     if(currentAction==ui->action9600){
-        ui->action4800->setChecked(1);
+        ui->action4800->setChecked(true);
         return;
         }
     if(currentAction==ui->action14400){
-        ui->action9600->setChecked(1);
+        ui->action9600->setChecked(true);
         return;
         }
     if(currentAction==ui->action19200){
-        ui->action14400->setChecked(1);
+        ui->action14400->setChecked(true);
         return;
         }
     if(currentAction==ui->action28800){
-        ui->action19200->setChecked(1);
+        ui->action19200->setChecked(true);
         return;
         }
     if(currentAction==ui->action38400){
-        ui->action28800->setChecked(1);
+        ui->action28800->setChecked(true);
         return;
         }
     if(currentAction==ui->action57600){
-        ui->action38400->setChecked(1);
+        ui->action38400->setChecked(true);
         return;
         }
     if(currentAction==ui->action115200){
-        ui->action57600->setChecked(1);
+        ui->action57600->setChecked(true);
         return;
         }
     if(currentAction==ui->action300){
-        ui->action115200->setChecked(1);
+        ui->action115200->setChecked(true);
         return;
         }
     if(currentAction==ui->action600){
-        ui->action300->setChecked(1);
+        ui->action300->setChecked(true);
         return;
         }
     qFatal("Invalid state in MainWindow::cycleBaudRateBackwards_CH1()");
@@ -754,51 +862,51 @@ void MainWindow::cycleBaudRate_CH2(){
     QAction *currentAction = uartBaudGroup_CH2->checkedAction();
     qDebug() << currentAction;
     if(currentAction==ui->action300_2){
-        ui->action600_2->setChecked(1);
+        ui->action600_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action600_2){
-        ui->action1200_2->setChecked(1);
+        ui->action1200_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action1200_2){
-        ui->action2400_2->setChecked(1);
+        ui->action2400_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action2400_2){
-        ui->action4800_2->setChecked(1);
+        ui->action4800_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action4800_2){
-        ui->action9600_2->setChecked(1);
+        ui->action9600_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action9600_2){
-        ui->action14400_2->setChecked(1);
+        ui->action14400_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action14400_2){
-        ui->action19200_2->setChecked(1);
+        ui->action19200_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action19200_2){
-        ui->action28800_2->setChecked(1);
+        ui->action28800_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action28800_2){
-        ui->action38400_2->setChecked(1);
+        ui->action38400_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action38400_2){
-        ui->action57600_2->setChecked(1);
+        ui->action57600_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action57600_2){
-        ui->action115200_2->setChecked(1);
+        ui->action115200_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action115200_2){
-        ui->action300_2->setChecked(1);
+        ui->action300_2->setChecked(true);
         return;
         }
     qFatal("Invalid state in MainWindow::cycleBaudRate_CH2()");
@@ -808,51 +916,51 @@ void MainWindow::cycleBaudRateBackwards_CH2(){
     QAction *currentAction = uartBaudGroup_CH2->checkedAction();
     qDebug() << currentAction;
     if(currentAction==ui->action1200_2){
-        ui->action600_2->setChecked(1);
+        ui->action600_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action2400_2){
-        ui->action1200_2->setChecked(1);
+        ui->action1200_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action4800_2){
-        ui->action2400_2->setChecked(1);
+        ui->action2400_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action9600_2){
-        ui->action4800_2->setChecked(1);
+        ui->action4800_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action14400_2){
-        ui->action9600_2->setChecked(1);
+        ui->action9600_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action19200_2){
-        ui->action14400_2->setChecked(1);
+        ui->action14400_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action28800_2){
-        ui->action19200_2->setChecked(1);
+        ui->action19200_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action38400_2){
-        ui->action28800_2->setChecked(1);
+        ui->action28800_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action57600_2){
-        ui->action38400_2->setChecked(1);
+        ui->action38400_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action115200_2){
-        ui->action57600_2->setChecked(1);
+        ui->action57600_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action300_2){
-        ui->action115200_2->setChecked(1);
+        ui->action115200_2->setChecked(true);
         return;
         }
     if(currentAction==ui->action600_2){
-        ui->action300_2->setChecked(1);
+        ui->action300_2->setChecked(true);
         return;
         }
     qFatal("Invalid state in MainWindow::cycleBaudRateBackwards_CH2()");
@@ -976,28 +1084,32 @@ void MainWindow::ctrlArrowDownTriggered(){
 
 void MainWindow::cycleDelayRight(){
     qDebug() << "RIGHT";
-    ui->controller_iso->delay -= ui->controller_iso->window/10;
-    if(ui->controller_iso->delay < 0) ui->controller_iso->delay = 0;
+    ui->controller_iso->display.delay -= ui->controller_iso->display.window/10;
+    if(ui->controller_iso->display.delay < 0) ui->controller_iso->display.delay = 0;
+    ui->controller_iso->delayUpdated(ui->controller_iso->display.delay);
 }
 
 void MainWindow::cycleDelayLeft(){
     qDebug() << "LEFT";
     double mws = ui->controller_iso->fileModeEnabled ? ui->controller_iso->daq_maxWindowSize : ((double)MAX_WINDOW_SIZE);
-    ui->controller_iso->delay += ui->controller_iso->window/10;
-    if(ui->controller_iso->delay > (mws - ui->controller_iso->window)) ui->controller_iso->delay = (mws - ui->controller_iso->window);
+    ui->controller_iso->display.delay += ui->controller_iso->display.window/10;
+    if(ui->controller_iso->display.delay > (mws - ui->controller_iso->display.window)) ui->controller_iso->display.delay = (mws - ui->controller_iso->display.window);
+    ui->controller_iso->delayUpdated(ui->controller_iso->display.delay);
 }
 
 void MainWindow::cycleDelayRight_large(){
     qDebug() << "RIGHT";
-    ui->controller_iso->delay -= ui->controller_iso->window/2;
-    if(ui->controller_iso->delay < 0) ui->controller_iso->delay = 0;
+    ui->controller_iso->display.delay -= ui->controller_iso->display.window/2;
+    if(ui->controller_iso->display.delay < 0) ui->controller_iso->display.delay = 0;
+    ui->controller_iso->delayUpdated(ui->controller_iso->display.delay);
 }
 
 void MainWindow::cycleDelayLeft_large(){
     qDebug() << "LEFT";
     double mws = ui->controller_iso->fileModeEnabled ? ui->controller_iso->daq_maxWindowSize : ((double)MAX_WINDOW_SIZE);
-    ui->controller_iso->delay += ui->controller_iso->window/2;
-    if(ui->controller_iso->delay > (mws - ui->controller_iso->window)) ui->controller_iso->delay = (mws - ui->controller_iso->window);
+    ui->controller_iso->display.delay += ui->controller_iso->display.window/2;
+    if(ui->controller_iso->display.delay > (mws - ui->controller_iso->display.window)) ui->controller_iso->display.delay = (mws - ui->controller_iso->display.window);
+    ui->controller_iso->delayUpdated(ui->controller_iso->display.delay);
 }
 
 void MainWindow::enableLabradorDebugging(){
@@ -1077,27 +1189,27 @@ void MainWindow::on_actionSnap_to_Cursors_triggered()
 {
     double xLeft, xRight, yBot, yTop;
 
-    yTop = ui->controller_iso->y1 > ui->controller_iso->y0 ? ui->controller_iso->y1 : ui->controller_iso->y0;
-    yBot = ui->controller_iso->y1 > ui->controller_iso->y0 ? ui->controller_iso->y0 : ui->controller_iso->y1;
+    yTop = std::max(ui->controller_iso->display.y1, ui->controller_iso->display.y0);
+    yBot = std::min(ui->controller_iso->display.y1, ui->controller_iso->display.y0);
 
-    xRight = ui->controller_iso->x1 > ui->controller_iso->x0 ? ui->controller_iso->x1 : ui->controller_iso->x0;
-    xLeft = ui->controller_iso->x1 > ui->controller_iso->x0 ? ui->controller_iso->x0 : ui->controller_iso->x1;
+    xRight = std::max(ui->controller_iso->display.x1, ui->controller_iso->display.x0);
+    xLeft = std::min(ui->controller_iso->display.x1, ui->controller_iso->display.x0);
 
     if((yBot-yTop) != 0){
-        ui->controller_iso->topRange = yTop;
-        ui->controller_iso->botRange = yBot;
+        ui->controller_iso->display.topRange = yTop;
+        ui->controller_iso->display.botRange = yBot;
     }
 
     if((xLeft - xRight) != 0){
-        ui->controller_iso->delay = - xRight;
-        ui->controller_iso->window = xRight - xLeft;
+        ui->controller_iso->display.delay = - xRight;
+        ui->controller_iso->display.window = xRight - xLeft;
     }
 }
 
 void MainWindow::on_actionEnter_Manually_triggered()
 {
-    ui->controller_iso->delay = 0;
-    scopeRangeEnterDialog dialog(this, ui->controller_iso->topRange, ui->controller_iso->botRange, ui->controller_iso->window, ui->controller_iso->delay);
+    ui->controller_iso->display.delay = 0;
+    scopeRangeEnterDialog dialog(this, ui->controller_iso->display.topRange, ui->controller_iso->display.botRange, ui->controller_iso->display.window, ui->controller_iso->display.delay);
     dialog.setModal(true);
     connect(&dialog, SIGNAL(yTopUpdated(double)), ui->controller_iso, SLOT(setTopRange(double)));
     connect(&dialog, SIGNAL(yBotUpdated(double)), ui->controller_iso, SLOT(setBotRange(double)));
@@ -1112,12 +1224,13 @@ void MainWindow::helloWorld(){
 
 #define QSETTINGS_DEFAULT_RETURN 42069
 void MainWindow::readSettingsFile(){
-    settings = new QSettings("settings.ini", QSettings::IniFormat);
+    settings = new QSettings();
     int connectionType = settings->value("ConnectionType", QSETTINGS_DEFAULT_RETURN).toInt();
     double calibrate_vref_ch1 = settings->value("CalibrateVrefCH1", 1.65).toDouble();
     double calibrate_vref_ch2 = settings->value("CalibrateVrefCH2", 1.65).toDouble();
     double calibrate_gain_ch1 = settings->value("CalibrateGainCH1", R4/(R3+R4)).toDouble();
     double calibrate_gain_ch2 = settings->value("CalibrateGainCH2", R4/(R3+R4)).toDouble();
+    psu_voltage_calibration_offset = settings->value("CalibratePsu", 0).toDouble();
 
     daq_num_to_average = settings->value("daq_defaultAverage", 1).toInt();
     daq_max_file_size = settings->value("daq_defaultFileSize", 2048000000).toULongLong();
@@ -1125,15 +1238,15 @@ void MainWindow::readSettingsFile(){
     //Change connection Type
     switch(connectionType){
     case 0:
-        ui->actionLo_bw->setChecked(1);
+        ui->actionLo_bw->setChecked(true);
         on_actionLo_bw_triggered();
         break;
     case 1:
-        ui->actionSingle_ep_msync->setChecked(1);
+        ui->actionSingle_ep_msync->setChecked(true);
         on_actionSingle_ep_msync_triggered();
         break;
     case 2:
-        ui->actionSingle_ep_async->setChecked(1);
+        ui->actionSingle_ep_async->setChecked(true);
         on_actionSingle_ep_async_triggered();
         break;
     }
@@ -1143,12 +1256,12 @@ void MainWindow::readSettingsFile(){
     ui->controller_iso->ch2_ref = 3.3 - calibrate_vref_ch2;
     ui->controller_iso->frontendGain_CH1 = calibrate_gain_ch1;
     ui->controller_iso->frontendGain_CH2 = calibrate_gain_ch2;
-    ui->controller_iso->internalBuffer375_CH1->voltage_ref = 3.3 - calibrate_vref_ch1;
-    ui->controller_iso->internalBuffer750->voltage_ref = 3.3 - calibrate_vref_ch1;
-    ui->controller_iso->internalBuffer375_CH2->voltage_ref = 3.3 - calibrate_vref_ch2;
-    ui->controller_iso->internalBuffer375_CH1->frontendGain = calibrate_gain_ch1;
-    ui->controller_iso->internalBuffer750->frontendGain = calibrate_gain_ch1;
-    ui->controller_iso->internalBuffer375_CH2->frontendGain = calibrate_gain_ch2;
+    ui->controller_iso->internalBuffer375_CH1->m_voltage_ref = 3.3 - calibrate_vref_ch1;
+    ui->controller_iso->internalBuffer750->m_voltage_ref = 3.3 - calibrate_vref_ch1;
+    ui->controller_iso->internalBuffer375_CH2->m_voltage_ref = 3.3 - calibrate_vref_ch2;
+    ui->controller_iso->internalBuffer375_CH1->m_frontendGain = calibrate_gain_ch1;
+    ui->controller_iso->internalBuffer750->m_frontendGain = calibrate_gain_ch1;
+    ui->controller_iso->internalBuffer375_CH2->m_frontendGain = calibrate_gain_ch2;
 
     if(!dt_AlreadyAskedAboutCalibration && ((calibrate_vref_ch1 == 1.65) || (calibrate_vref_ch2 == 1.65) || (calibrate_gain_ch1 == R4/(R3+R4)) || (calibrate_gain_ch2 == R4/(R3+R4)))){
         //Prompt user to calibrate if no calibration data found.
@@ -1248,8 +1361,12 @@ void MainWindow::reinitUsbStage2(void){
     connect(ui->debugButton3, SIGNAL(clicked()), ui->controller_iso->driver, SLOT(bootloaderJump()));
     connect(ui->psuSlider, SIGNAL(voltageChanged(double)), ui->controller_iso->driver, SLOT(setPsu(double)));
     connect(ui->controller_iso, SIGNAL(setGain(double)), ui->controller_iso->driver, SLOT(setGain(double)));
-    connect(ui->controller_fg, SIGNAL(functionGenToUpdate(int,functionGenControl*)), ui->controller_iso->driver, SLOT(setFunctionGen(int,functionGenControl*)));
+    connect(ui->controller_fg, &functionGenControl::functionGenToUpdate, ui->controller_iso->driver, &genericUsbDriver::setFunctionGen);
     connect(ui->bufferDisplay, SIGNAL(modeChange(int)), ui->controller_iso->driver, SLOT(setDeviceMode(int)));
+	connect(ui->bufferDisplay, &bufferControl::modeChange, this, [this](){
+		// Force a trigger refresh
+		ui->controller_iso->setTriggerLevel(ui->triggerLevelValue->value());	
+	});
     connect(ui->bufferDisplay, SIGNAL(updateDig(int)), ui->controller_iso->driver, SLOT(newDig(int)));
 
     //Set the settings again!
@@ -1267,6 +1384,7 @@ void MainWindow::reinitUsbStage2(void){
     connect(ui->controller_iso->driver, SIGNAL(signalFirmwareFlash(void)), ui->deviceConnected, SLOT(flashingFirmware(void)));
     connect(ui->controller_iso->driver, SIGNAL(initialConnectComplete()), this, SLOT(resetUsbState()));
     ui->controller_iso->driver->setGain(reinitScopeGain);
+    ui->controller_iso->driver->psu_offset = psu_voltage_calibration_offset;
 
     readSettingsFile();
 
@@ -1276,13 +1394,14 @@ void MainWindow::reinitUsbStage2(void){
 }
 
 void MainWindow::resetUsbState(void){
+	using functionGen::ChannelID;
     //ui->controller_iso->driver->setDeviceMode(deviceMode);
     //ui->controller_iso->driver->setPsu(currentPsuVoltage);
     ui->psuSlider->poke();
     //ui->controller_iso->driver->newDig(digitalPinState);
     ui->bufferDisplay->poke();
-    ui->controller_iso->driver->setFunctionGen(0,ui->controller_fg);
-    ui->controller_iso->driver->setFunctionGen(1,ui->controller_fg);
+    ui->controller_iso->driver->setFunctionGen(ChannelID::CH1, ui->controller_fg->getChannelController(ChannelID::CH1));
+    ui->controller_iso->driver->setFunctionGen(ChannelID::CH2, ui->controller_fg->getChannelController(ChannelID::CH2));
 
     ui->controller_iso->clearBuffers(1,1,1);
     ui->controller_iso->doNotTouchGraph = false;
@@ -1636,12 +1755,12 @@ void MainWindow::on_actionCalibrate_triggered()
     ui->controller_iso->ch2_ref = 1.65;
     ui->controller_iso->frontendGain_CH1 = (R4/(R3+R4));
     ui->controller_iso->frontendGain_CH2 = (R4/(R3+R4));
-    ui->controller_iso->internalBuffer375_CH1->voltage_ref = 1.65;
-    ui->controller_iso->internalBuffer750->voltage_ref = 1.65;
-    ui->controller_iso->internalBuffer375_CH2->voltage_ref = 1.65;
-    ui->controller_iso->internalBuffer375_CH1->frontendGain = R4/(R3+R4);
-    ui->controller_iso->internalBuffer750->frontendGain = R4/(R3+R4);
-    ui->controller_iso->internalBuffer375_CH2->frontendGain = R4/(R3+R4);
+    ui->controller_iso->internalBuffer375_CH1->m_voltage_ref = 1.65;
+    ui->controller_iso->internalBuffer750->m_voltage_ref = 1.65;
+    ui->controller_iso->internalBuffer375_CH2->m_voltage_ref = 1.65;
+    ui->controller_iso->internalBuffer375_CH1->m_frontendGain = R4/(R3+R4);
+    ui->controller_iso->internalBuffer750->m_frontendGain = R4/(R3+R4);
+    ui->controller_iso->internalBuffer375_CH2->m_frontendGain = R4/(R3+R4);
 
     settings->setValue("CalibrateVrefCH1", 1.65);
     settings->setValue("CalibrateVrefCH2", 1.65);
@@ -1671,9 +1790,9 @@ void MainWindow::calibrateStage2(){
     ui->controller_iso->ch1_ref = 3.3 - vref_CH1;
     ui->controller_iso->ch2_ref = 3.3 - vref_CH2;
 
-    ui->controller_iso->internalBuffer375_CH1->voltage_ref = 3.3 - vref_CH1;
-    ui->controller_iso->internalBuffer750->voltage_ref = 3.3 - vref_CH1;
-    ui->controller_iso->internalBuffer375_CH2->voltage_ref = 3.3 - vref_CH2;
+    ui->controller_iso->internalBuffer375_CH1->m_voltage_ref = 3.3 - vref_CH1;
+    ui->controller_iso->internalBuffer750->m_voltage_ref = 3.3 - vref_CH1;
+    ui->controller_iso->internalBuffer375_CH2->m_voltage_ref = 3.3 - vref_CH2;
 
     settings->setValue("CalibrateVrefCH1", vref_CH1);
     settings->setValue("CalibrateVrefCH2", vref_CH2);
@@ -1707,13 +1826,16 @@ void MainWindow::calibrateStage3(){
     ui->controller_iso->frontendGain_CH2 = (vref_CH2 - vMeasured_CH2)*(ui->controller_iso->frontendGain_CH2)/vref_CH2;
     qDebug() << "New gain (CH1) = " << ui->controller_iso->frontendGain_CH1;
 
-    ui->controller_iso->internalBuffer375_CH1->frontendGain = (vref_CH1 - vMeasured_CH1)*(ui->controller_iso->frontendGain_CH1)/vref_CH1;
-    ui->controller_iso->internalBuffer750->frontendGain = (vref_CH1 - vMeasured_CH1)*(ui->controller_iso->frontendGain_CH1)/vref_CH1;
-    ui->controller_iso->internalBuffer375_CH2->frontendGain = (vref_CH2 - vMeasured_CH2)*(ui->controller_iso->frontendGain_CH2)/vref_CH2;
+    ui->controller_iso->internalBuffer375_CH1->m_frontendGain = (vref_CH1 - vMeasured_CH1)*(ui->controller_iso->frontendGain_CH1)/vref_CH1;
+    ui->controller_iso->internalBuffer750->m_frontendGain = (vref_CH1 - vMeasured_CH1)*(ui->controller_iso->frontendGain_CH1)/vref_CH1;
+    ui->controller_iso->internalBuffer375_CH2->m_frontendGain = (vref_CH2 - vMeasured_CH2)*(ui->controller_iso->frontendGain_CH2)/vref_CH2;
     settings->setValue("CalibrateGainCH1", ui->controller_iso->frontendGain_CH1);
     settings->setValue("CalibrateGainCH2", ui->controller_iso->frontendGain_CH2);
-    calibrationMessages->setText("Calibration complete.");
+    calibrationMessages->setText("Oscilloscope Calibration complete.");
     calibrationMessages->exec();
+
+    if (dt_userWantsToCalibrate)
+        on_actionCalibrate_2_triggered();
 }
 
 void MainWindow::rSourceIndexChanged(int newSource){
@@ -1877,7 +1999,7 @@ void MainWindow::on_actionRecord_CH1_triggered(bool checked)
 
 #ifndef PLATFORM_ANDROID
     if(len==0){
-        ui->actionRecord_CH1->setChecked(0);
+        ui->actionRecord_CH1->setChecked(false);
         return; //User cancelled
     }
 #endif
@@ -1890,7 +2012,6 @@ void MainWindow::on_actionRecord_CH1_triggered(bool checked)
     }
     ui->bufferDisplay->scopeDsrDisableOverride = true;
     ui->bufferDisplay->poke();
-    return;
 }
 
 void MainWindow::on_actionRecord_CH2_triggered(bool checked)
@@ -1909,13 +2030,15 @@ void MainWindow::on_actionRecord_CH2_triggered(bool checked)
 
 #ifndef PLATFORM_ANDROID
     if(len==0){
-        ui->actionRecord_CH2->setChecked(0);
+        ui->actionRecord_CH2->setChecked(false);
         return; //User cancelled
     }
 #endif
-    output375_CH2 = new QFile(outputDir->filePath("375_CH2.csv"));
+    output375_CH2 = new QFile(fileName);
     ui->controller_iso->internalBuffer375_CH2->enableFileIO(output375_CH2, daq_num_to_average, daq_max_file_size);
-    return;
+
+    if((checked) && (ui->controller_iso->driver->deviceMode != 4))
+        QMessageBox::warning(nullptr, "Warning", "CH2 is disabled.  The DAQ will NOT RECORD any data from from CH2 until it has been enabled!");
 }
 
 //Disable the serial, without wiping everything!
@@ -1953,18 +2076,6 @@ void MainWindow::serialEmergencyDisable(int channel){
 
 }
 
-//This is a slot that intercepts a signal from the serial decoding CH1 checkbox.
-//It changes the mode to ensure I2C can work.
-//Both channels are necessary; SDA and SCL.
-void MainWindow::checkForI2C(int value){
-    if(value==2){
-        ui->scopeGroup_CH1->setChecked(false);
-        ui->scopeGroup_CH2->setChecked(false);
-        ui->multimeterGroup->setChecked(false);
-    }
-    return;
-}
-
 void MainWindow::on_actionFirmware_Recovery_triggered()
 {
     qDebug() << "on_actionFirmware_Recovery_triggered";
@@ -1989,7 +2100,7 @@ void MainWindow::on_actionDAQ_Settings_triggered()
 }
 
 void MainWindow::fileLimitReached_CH1(void){
-    ui->actionRecord_CH1->setChecked(0);
+    ui->actionRecord_CH1->setChecked(false);
 
     QMessageBox recordingStoppedMessageBox;
     char recordingStoppedMessage[256];
@@ -1999,7 +2110,7 @@ void MainWindow::fileLimitReached_CH1(void){
 }
 
 void MainWindow::fileLimitReached_CH2(void){
-    ui->actionRecord_CH2->setChecked(0);
+    ui->actionRecord_CH2->setChecked(false);
 
     QMessageBox recordingStoppedMessageBox;
     char recordingStoppedMessage[256];
@@ -2026,7 +2137,11 @@ void MainWindow::daq_saveButtonPressed(){
 
 void MainWindow::on_actionAbout_triggered()
 {
-    QMessageBox::about(this, "About EspoTek Labrador", "EspoTek Labrador, Christmas Edition 2017.\nWebsite: http://espotek.com\nContact Email: admin@espotek.com");
+    QMessageBox aboutDialog(this);
+    aboutDialog.setWindowTitle("About EspoTek Labrador");
+    aboutDialog.setTextFormat(Qt::RichText);
+    aboutDialog.setText(kAboutString);
+    aboutDialog.exec();
 }
 
 void MainWindow::on_actionOpen_DAQ_File_triggered()
@@ -2082,4 +2197,257 @@ void MainWindow::on_actionQuit_triggered()
 void MainWindow::on_kickstartIsoButton_clicked()
 {
     ui->controller_iso->driver->kickstartIso();
+}
+
+void MainWindow::on_actionCalibrate_2_triggered()
+{
+    qDebug() << "Calibrating PSU!";
+
+    if (!ui->controller_iso->driver->connected) {
+        calibrationMessages->setStandardButtons(QMessageBox::Ok);
+        calibrationMessages->setText("You need to connect the board before calibrating it!");
+        calibrationMessages->exec();
+        return;
+    }
+
+    //Abort if Scope is uncalibrated
+    if ((ui->controller_iso->ch1_ref == 1.65) && (ui->controller_iso->ch2_ref == 1.65) && (ui->controller_iso->frontendGain_CH1 ==  R4/(R3+R4)) && (ui->controller_iso->frontendGain_CH2 == R4/(R3+R4)))\
+    {
+        calibrationMessages->setStandardButtons(QMessageBox::Ok);
+        calibrationMessages->setText("You need to calibrate the oscilloscope before the power supply!");
+        calibrationMessages->exec();
+        return;
+    }
+
+    calibrationMessages->setStandardButtons(QMessageBox::Ok|QMessageBox::Cancel);
+    calibrationMessages->setText("Power Supply calibration requires me to control your power supply temporarily.  \n\nTO PREVENT BLUE SMOKE DAMAGE, DISCONNECT ANY CIRCUIT ATTACHED TO YOUR POWER SUPPLY NOW.");
+    if (calibrationMessages->exec() == QMessageBox::Cancel) {
+        return;
+    }
+
+    qDebug() << "Beginning PSU calibration!";
+
+    //Must be mode 0
+    //Must be DC coupled
+    //CH1 must be shorted to PSU out
+    //Gain must be 1x
+    qDebug() << "Changing workspace...";
+    ui->psuSlider->setValue(0);
+    ui->busSifferGroup_CH1->setChecked(false);
+    ui->busSnifferGroup_CH2->setChecked(false);
+    ui->multimeterGroup->setChecked(false);
+    ui->triggerGroup->setChecked(false);
+    ui->scopeGroup_CH1->setChecked(true);
+    ui->scopeGroup_CH2->setChecked(false);
+    ui->pausedLabeL_CH1->setChecked(false);
+    ui->pausedLabel_CH2->setChecked(false);
+    ui->doubleSampleLabel->setChecked(false);
+    ui->acCoupledLabel_CH1->setChecked(false);
+    ui->acCoupledLabel_CH2->setChecked(false);
+    ui->pause_LA->setChecked(false);
+    ui->multimeterPauseCheckBox->setChecked(false);
+
+    ui->controller_iso->setAutoGain(false);
+    ui->controller_iso->setGain(4);
+
+    //Remove the offset before setting it again; don't want them to stack!
+    ui->controller_iso->driver->psu_offset = 0;
+
+    qDebug() << "PSU Calibration routine beginning!";
+    calibrationMessages->setStandardButtons(QMessageBox::Ok);
+    calibrationMessages->setText("Please connect your Labrador's Oscilloscope CH1 (DC) pin to the Power Supply Output (positive) then press OK to continue.");
+    calibrationMessages->exec();
+
+    ui->controller_iso->driver->setPsu(5);
+    ui->controller_iso->clearBuffers(1,1,1);
+    QTimer::singleShot(1800, this, SLOT(calibrate_psu_stage2()));
+}
+
+void MainWindow::calibrate_psu_stage2()
+{
+    PSU5 = ui->controller_iso->meanVoltageLast(1, 1, 128);
+    qDebug() << "PSU5 =" << PSU5;
+    if((PSU5 > 6) | (PSU5 < 4) ){
+        ui->controller_iso->driver->setPsu(4.5);
+        ui->psuSlider->setValue(0);
+        ui->controller_iso->clearBuffers(1,1,1);
+        ui->controller_iso->setAutoGain(true);
+        ui->controller_iso->autoGain();
+        calibrationMessages->setText("Calibration has been abandoned due to out-of-range values.  The oscilloscope should show approximately 5V.  Please check all wires on your Labrador board and try again.");
+        calibrationMessages->exec();
+        return;
+    }
+    ui->controller_iso->setGain(1);
+    ui->controller_iso->driver->setPsu(10);
+    ui->controller_iso->clearBuffers(1,1,1);
+    QTimer::singleShot(1800, this, SLOT(calibrate_psu_stage3()));
+}
+
+void MainWindow::calibrate_psu_stage3()
+{
+    PSU10 = ui->controller_iso->meanVoltageLast(1, 1, 128);
+    qDebug() << "PSU10 =" << PSU10;
+    ui->controller_iso->driver->setPsu(4.5);
+    ui->psuSlider->setValue(0);
+    ui->controller_iso->clearBuffers(1,1,1);
+    ui->controller_iso->setAutoGain(true);
+    ui->controller_iso->autoGain();
+
+
+    if((PSU10 > 11) | (PSU10 < 9) ){
+        calibrationMessages->setText("Calibration has been abandoned due to out-of-range values.  The oscilloscope should show approximately 10V.  Please check all wires on your Labrador board and try again.");
+        calibrationMessages->exec();
+        return;
+    }
+
+    psu_voltage_calibration_offset = ((PSU5 - 5) + (PSU10 - 10)) / 2.0;
+    settings->setValue("CalibratePsu", psu_voltage_calibration_offset);
+    ui->controller_iso->driver->psu_offset = psu_voltage_calibration_offset;
+
+    calibrationMessages->setStandardButtons(QMessageBox::Ok);
+    calibrationMessages->setText("PSU calibration complete.");
+    calibrationMessages->exec();
+
+    qDebug() << "PSU Calibration complete!  Offset =" << psu_voltage_calibration_offset;
+}
+
+void MainWindow::on_actionSerial_triggered(bool checked)
+{
+    ui->controller_iso->setSerialType(0);
+}
+
+void MainWindow::on_actionI2C_triggered(bool checked)
+{
+    ui->controller_iso->setSerialType(1);
+}
+
+void MainWindow::on_actionShow_Range_Dialog_on_Main_Page_triggered(bool checked)
+{
+    qDebug() << "on_actionShow_Range_Dialog_on_Main_Page_triggered" << checked;
+    if (checked)
+    {
+        scopeRangeSwitch = new scopeRangeEnterDialog(nullptr, false, ui->controller_iso->display.topRange, ui->controller_iso->display.botRange, ui->controller_iso->display.window, ui->controller_iso->display.delay);
+        scopeRangeSwitch->setWindowFlags(Qt::Widget);
+        ui->verticalLayout_5->insertWidget(2, scopeRangeSwitch);
+        connect(scopeRangeSwitch, SIGNAL(yTopUpdated(double)), ui->controller_iso, SLOT(setTopRange(double)));
+        connect(scopeRangeSwitch, SIGNAL(yBotUpdated(double)), ui->controller_iso, SLOT(setBotRange(double)));
+        connect(scopeRangeSwitch, SIGNAL(windowUpdated(double)), ui->controller_iso, SLOT(setTimeWindow(double)));
+        connect(scopeRangeSwitch, SIGNAL(delayUpdated(double)), ui->controller_iso, SLOT(setDelay(double)));
+
+        connect(ui->controller_iso, SIGNAL(topRangeUpdated(double)), scopeRangeSwitch, SLOT(yTopChanged(double)));
+        connect(ui->controller_iso, SIGNAL(botRangeUpdated(double)), scopeRangeSwitch, SLOT(yBotChanged(double)));
+        connect(ui->controller_iso, SIGNAL(timeWindowUpdated(double)), scopeRangeSwitch, SLOT(windowChanged(double)));
+        connect(ui->controller_iso, SIGNAL(delayUpdated(double)), scopeRangeSwitch, SLOT(delayChanged(double)));
+    }
+    else
+    {
+        delete scopeRangeSwitch;
+        scopeRangeSwitch = nullptr;
+    }
+}
+
+void MainWindow::paused(bool enabled)
+{
+	qDebug() << "MainWindow::paused(" << enabled << ")";
+	ui->hideCH1Box->setVisible(enabled);
+	ui->hideCH2Box->setVisible(enabled);
+	
+	if (! enabled)
+	{
+		ui->hideCH1Box->setChecked(false);
+		ui->hideCH2Box->setChecked(false);
+	}
+}
+
+void MainWindow::on_actionNone_triggered()
+{
+    ui->controller_iso->parity_CH1 = UartParity::None;
+}
+
+void MainWindow::on_actionEven_triggered()
+{
+    ui->controller_iso->parity_CH1 = UartParity::Even;
+}
+
+void MainWindow::on_actionOdd_triggered()
+{
+    ui->controller_iso->parity_CH1 = UartParity::Odd;
+}
+
+void MainWindow::on_actionNone_2_triggered()
+{
+    ui->controller_iso->parity_CH2 = UartParity::None;
+}
+
+void MainWindow::on_actionEven_2_triggered()
+{
+    ui->controller_iso->parity_CH2 = UartParity::Even;
+}
+
+void MainWindow::on_actionOdd_2_triggered()
+{
+    ui->controller_iso->parity_CH2 = UartParity::Odd;
+}
+
+void MainWindow::on_actionDocumentation_triggered()
+{
+    QDesktopServices::openUrl(QUrl(kDocumentationUrl, QUrl::TolerantMode));
+}
+
+void MainWindow::on_actionPinout_triggered()
+{
+    QDesktopServices::openUrl(QUrl(kPinoutUrl, QUrl::TolerantMode));
+}
+
+void MainWindow::cursorGroupEnabled(bool enabled)
+{
+    static bool cursorStatsEnabledState;
+    static bool makeCursorsNicerState;
+
+    if (enabled)
+    {
+        ui->controller_iso->cursorStatsEnabled = cursorStatsEnabledState;
+        ui->makeCursorsNicer->setTurnedOn(makeCursorsNicerState);
+        ui->cursorGroup->setEnabled(true);
+    }
+    else
+    {
+        cursorStatsEnabledState = ui->controller_iso->cursorStatsEnabled;
+        makeCursorsNicerState = ui->makeCursorsNicer->turnedOn();
+        ui->controller_iso->cursorStatsEnabled = false;
+        ui->makeCursorsNicer->setTurnedOn(false);
+        ui->cursorGroup->setEnabled(false);
+    }
+    
+}
+
+void MainWindow::on_actionHide_Widget_Oscilloscope_triggered(bool checked)
+{
+    ui->scopeGroup_CH1->setVisible(!checked);
+    ui->scopeGroup_CH2->setVisible(!checked);
+    ui->cursorGroup->setVisible(!checked);
+    ui->triggerGroup->setVisible(!checked);
+}
+
+void MainWindow::on_actionHide_Widget_SignalGen_triggered(bool checked)
+{
+    ui->signalGenGroup_CH1->setVisible(!checked);
+    ui->signalGenGroup_CH2->setVisible(!checked);
+}
+
+void MainWindow::on_actionHide_Widget_Multimeter_triggered(bool checked)
+{
+    ui->multimeterGroup->setVisible(!checked);
+}
+
+void MainWindow::on_actionHide_Widget_PowerSupply_triggered(bool checked)
+{
+    ui->psuGroup->setVisible(!checked);
+}
+
+void MainWindow::on_actionHide_Widget_LogicAnalyzer_triggered(bool checked)
+{
+    ui->busSifferGroup_CH1->setVisible(!checked);
+    ui->busSnifferGroup_CH2->setVisible(!checked);
+    ui->digitalOutputGroup->setVisible(!checked);
 }

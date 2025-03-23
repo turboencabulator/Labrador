@@ -4,36 +4,74 @@
 #include <QObject>
 #include "isobufferbuffer.h"
 #include "isobuffer.h"
+#include <mutex>
+#include <limits.h>
+#include <stdint.h>
+
+enum class UartParity : uint8_t
+{
+    None,
+    Even,
+    Odd
+};
 
 class uartStyleDecoder : public QObject
 {
     Q_OBJECT
 public:
-    explicit uartStyleDecoder(QObject *parent_in = NULL);
-    void serialDecode(double baudRate);
-    int serialDistance();
-    QTimer *updateTimer;
+    explicit uartStyleDecoder(double baudRate, QObject *parent = NULL);
+	~uartStyleDecoder() = default;
+
+
 private:
-    isoBuffer *parent;
-    int serialPtr_bit = 0;
+    isoBuffer *m_parent;
+
+	// Indicates the current bit being decoded.
+    int serialPtr_bit;
+
     bool uartTransmitting = false;
     bool newUartSymbol = false;
-    int dataBit_current = 0, dataBit_max = 7;
+    uint32_t dataBit_current = 0;
+    uint32_t parityIndex = UINT_MAX;
+    uint32_t dataBit_max = 7;
     unsigned short currentUartSymbol = 0;
     bool jitterCompensationNeeded = true;
-    void updateSerialPtr(double baudRate, unsigned char current_bit);
-    unsigned char getNextUartBit();
-    void decodeNextUartBit(unsigned char bitValue);
-    bool jitterCompensationProcedure(double baudRate, unsigned char current_bit);
+
+    void updateSerialPtr(bool current_bit);
+    bool getNextUartBit() const;
+    void decodeNextUartBit(bool bitValue);
+    bool jitterCompensationProcedure(bool current_bit);
+
+    bool m_hexDisplay = false;
+
     QPlainTextEdit *console;
-    isoBufferBuffer *serialBuffer;
-    int numCharsInBuffer = 0;
-    void decodeDatabit(int mode);
-    char decode_baudot(short symbol);
+    isoBufferBuffer m_serialBuffer;
+public:
+	double m_baudRate;
+    QTimer m_updateTimer; // IMPORTANT: must be after m_serialBuffer. construction / destruction order matters
+    void serialDecode();
+    int serialDistance() const;
+
 signals:
     void wireDisconnected(int);
+
 public slots:
     void updateConsole();
+    void setParityMode(UartParity newParity);
+    void setHexDisplay(bool enabled);
+
+private:
+    char decodeDatabit(int mode, short symbol) const;
+    char decodeBaudot(short symbol) const;
+
+	std::mutex mutex;
+    UartParity parity = UartParity::None;
+
+    bool isParityCorrect(uint32_t bitField) const;
+	UartParity parityOf(uint32_t bitField) const;
+
+    bool parityCheckFailed = false;
+
 };
 
 #endif // UARTSTYLEDECODER_H

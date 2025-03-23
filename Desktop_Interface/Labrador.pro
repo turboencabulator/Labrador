@@ -9,7 +9,9 @@
 ######CLEAN->RUN QMAKE->BUILD after changing anything on this page!!!######
 ##########################################################################
 
-QT       += core gui
+QT += core gui
+
+CONFIG += c++14
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets printsupport
 
@@ -40,7 +42,8 @@ SOURCES += main.cpp\
     uartstyledecoder.cpp \
     daqform.cpp \
     daqloadprompt.cpp \
-    isobuffer_file.cpp
+    isobuffer_file.cpp \
+	i2cdecoder.cpp
 
 HEADERS  += mainwindow.h \
     functiongencontrol.h \
@@ -56,7 +59,8 @@ HEADERS  += mainwindow.h \
     uartstyledecoder.h \
     daqform.h \
     daqloadprompt.h \
-    isobuffer_file.h
+    isobuffer_file.h \
+	i2cdecoder.h
 
 android:{
 FORMS    += ui_files_mobile/mainwindow.ui \
@@ -131,6 +135,9 @@ unix:!android:!macx{
             QMAKE_CXXFLAGS += -fsigned-char
             DEFINES += "PLATFORM_RASPBERRY_PI"
             #All ARM-Linux GCC treats char as unsigned by default???
+            lib_deploy.files = $$PWD/build_linux/libdfuprog/lib/arm/libdfuprog-0.9.so
+            lib_deploy.path = /usr/lib
+
     } else {
         contains(QT_ARCH, i386) {
             message("Building for Linux (x86)")
@@ -142,6 +149,9 @@ unix:!android:!macx{
             unix:!android:!macx:LIBS += -L$$PWD/build_linux/libdfuprog/lib/x86 -ldfuprog-0.9
             unix:!android:!macx:INCLUDEPATH += $$PWD/build_linux/libdfuprog/include
             unix:!android:!macx:DEPENDPATH += $$PWD/build_linux/libdfuprog/include
+            lib_deploy.files = $$PWD/build_linux/libdfuprog/lib/x86/libdfuprog-0.9.so
+            lib_deploy.path = /usr/lib
+
         } else {
             message("Building for Linux (x64)")
             #libusb include
@@ -153,7 +163,58 @@ unix:!android:!macx{
             unix:!android:!macx:LIBS += -L$$PWD/build_linux/libdfuprog/lib/x64 -ldfuprog-0.9
             unix:!android:!macx:INCLUDEPATH += $$PWD/build_linux/libdfuprog/include
             unix:!android:!macx:DEPENDPATH += $$PWD/build_linux/libdfuprog/include
+    	    lib_deploy.files = $$PWD/build_linux/libdfuprog/lib/x64/libdfuprog-0.9.so
+            lib_deploy.path = /usr/lib
         }
+    }
+    
+    other.files += bin/firmware
+    other.files += bin/waveforms
+    other.path = /usr/bin/EspoTek-Labrador
+    
+    target.path = /usr/bin/EspoTek-Labrador
+    
+    udev.path = /etc/udev/rules.d
+    udev.files = rules.d/69-labrador.rules
+    
+    icon48.files += resources/icon48/espotek-labrador.png
+    icon48.path = /usr/share/icons/hicolor/48x48/apps/
+
+    icon256.files += resources/icon256/espotek-labrador.png
+    icon256.path = /usr/share/icons/hicolor/256x256/apps/
+    
+    equals(APPIMAGE, 1){
+        desktop.files += resources/appimage/espotek-labrador.desktop
+    }
+    !equals(APPIMAGE, 1){
+        desktop.files += resources/espotek-labrador.desktop
+    }
+    desktop.path = /usr/share/applications
+    
+    symlink.path = /usr/bin
+    symlink.extra = ln -sf ${INSTALL_ROOT}/usr/bin/EspoTek-Labrador/Labrador /usr/bin/labrador
+    
+    udevextra.path = /etc/udev/rules.d
+    !equals(DEB, 1){
+        udevextra.extra = udevadm control --reload-rules && udevadm trigger
+    }
+
+    equals(APPIMAGE, 1){
+        other.path = /usr/bin
+        target.path = /usr/bin
+    }
+
+    INSTALLS += target
+    INSTALLS += lib_deploy
+    INSTALLS += other
+    INSTALLS += udev
+    INSTALLS += icon48
+    INSTALLS += icon256
+    INSTALLS += desktop
+
+    !equals(APPIMAGE, 1){
+        INSTALLS += symlink
+        INSTALLS += udevextra
     }
 }
 
