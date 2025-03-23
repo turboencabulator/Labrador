@@ -38,3 +38,11 @@ jobs:
           make
           make INSTALL_ROOT=labrador install
           JAVA_HOME=${JAVA_HOME_8_X64} androiddeployqt --input android-libLabrador.so-deployment-settings.json --output labrador --release --verbose --gradle --android-platform android-27
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: Desktop_Interface/labrador/build/outputs/apk/labrador-release-unsigned.apk
+          compression-level: 0
+          if-no-files-found: error
