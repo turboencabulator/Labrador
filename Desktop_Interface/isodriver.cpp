@@ -859,6 +859,12 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
     if(CH1_mode == -1) {
         analogConvert(readData750.get(), &CH1, 128, AC_CH1, 1);
 
+        for (int i=0; i < GRAPH_SAMPLES; i++)
+        {
+            CH1[i] /= m_attenuation_CH1;
+            CH1[i] += m_offset_CH1;
+        }
+
         if (spectrum)
         {
             analogConvert(dt_samples1.get(), &converted_dt_samples1, 128, AC_CH1, 1);
