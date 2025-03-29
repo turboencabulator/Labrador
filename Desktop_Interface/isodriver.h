@@ -30,15 +30,15 @@ class DisplayControl : public QObject
 {
     Q_OBJECT
 public:
-
+    explicit DisplayControl(double left, double right, double top, double bottom);
     double delay = 0;
-    double window = 0.01;
+    double window = 0;
     double y0 = 0;
     double y1 = 0;
     double x0 = 0;
     double x1 = 0;
-    double topRange = 2.5;
-    double botRange = -0.5;
+    double topRange = 0;
+    double botRange = 0;
 
     void setVoltageRange (QWheelEvent* event, bool isProperlyPaused, double maxWindowSize, QCustomPlot* axes);
 
@@ -80,7 +80,7 @@ public:
     int baudRate_CH2 = 9600;
     double currentVmean;
     //Display Control Vars (Variables that control how the buffers are displayed)
-    DisplayControl display;
+    DisplayControl *display = new DisplayControl(-0.1, 0, 2.5, -0.5);
     //Generic Functions
     void setDriver(genericUsbDriver *newDriver);
     void setAxes(QCustomPlot *newAxes);
