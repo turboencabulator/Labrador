@@ -297,7 +297,7 @@ void isoDriver::setVisible_CH2(bool visible){
 
 void isoDriver::setVoltageRange(QWheelEvent* event)
 {
-    if(doNotTouchGraph && !fileModeEnabled) return;
+    if((doNotTouchGraph && !fileModeEnabled) || spectrum || freqResp) return;
 
     bool isProperlyPaused = properlyPaused();
     double maxWindowSize = fileModeEnabled ? daq_maxWindowSize : ((double)MAX_WINDOW_SIZE);
