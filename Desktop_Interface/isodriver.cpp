@@ -24,16 +24,27 @@ isoDriver::isoDriver(QWidget *parent) : QLabel(parent)
     isoTemp = (char *) malloc(TIMER_PERIOD*ADC_SPF + 8); //8-byte header contains (unsigned long) length
 
     char volts[2] = "V";
+    char decibel[3] = "dB";
+    char decibelmv[5] = "dBmV";
     char seconds[2] = "s";
     char hertz[3] = "Hz";
 
-    v0 = new siprint(volts, 1234);
+    v0 = new siprint(volts, 0);
     v1 = new siprint(volts, 0);
     dv = new siprint(volts, 0);
+    db0 = new siprint(decibel, 0);
+    db1 = new siprint(decibel, 0);
+    ddb = new siprint(decibel, 0);
+    dbmv0 = new siprint(decibelmv, 0);
+    dbmv1 = new siprint(decibelmv, 0);
+    ddbmv = new siprint(decibelmv, 0);
     t0 = new siprint(seconds, 0);
     t1 = new siprint(seconds, 0);
     dt = new siprint(seconds, 0);
     f = new siprint(hertz, 0);
+    f0 = new siprint(hertz, 0);
+    f1 = new siprint(hertz, 0);
+    df = new siprint(hertz, 0);
 
     startTimer();
 
@@ -564,13 +575,13 @@ void isoDriver::udateCursors(void){
     vert1y[0] = display->botRange;
     vert1y[1] = display->topRange;
 
-    hori0x[0] = -display->window - display->delay;
-    hori0x[1] = -display->delay;
+    hori0x[0] = (spectrum || freqResp) ? 0 : -display->window - display->delay;
+    hori0x[1] = (spectrum || freqResp) ? display->window : -display->delay;
     hori0y[0] = display->y0;
     hori0y[1] = display->y0;
 
-    hori1x[0] = -display->window - display->delay;
-    hori1x[1] = -display->delay;
+    hori1x[0] = (spectrum || freqResp) ? 0 : -display->window - display->delay;
+    hori1x[1] = (spectrum || freqResp) ? display->window : -display->delay;
     hori1y[0] = display->y1;
     hori1y[1] = display->y1;
 
@@ -589,19 +600,43 @@ void isoDriver::udateCursors(void){
 
     QString *cursorStatsString = new QString();
 
-    v0->value = display->y0;
-    v1->value = display->y1;
-    dv->value = display->y0-display->y1;
-    t0->value = display->x0;
-    t1->value = display->x1;
-    dt->value = fabs(display->x0 - display->x1);
-    f->value = 1 / (display->x1 - display->x0);
-
     char temp_hori[64];
     char temp_vert[64];
     char temp_separator[2];
-    sprintf(temp_hori, "V0 = %s,  V1 = %s,  ΔV = %s", v0->printVal(), v1->printVal(), dv->printVal());
-    sprintf(temp_vert, "t0 = %s, t1 = %s,  Δt = %s,  f = %s", t0->printVal(), t1->printVal(), dt->printVal(), f->printVal());
+    if(spectrum)
+    {
+        dbmv0->value = display->y0;
+        dbmv1->value = display->y1;
+        ddbmv->value = display->y0-display->y1;
+        f0->value = display->x0;
+        f1->value = display->x1;
+        df->value = fabs(display->x0 - display->x1);
+        sprintf(temp_hori, "P0 = %s,  P1 = %s,  ΔP = %s", dbmv0->printVal(), dbmv1->printVal(), ddbmv->printVal());
+        sprintf(temp_vert, "f0 = %s, f1 = %s,  Δf = %s", f0->printVal(), f1->printVal(), df->printVal());
+    }
+    else if(freqResp)
+    {
+        db0->value = display->y0;
+        db1->value = display->y1;
+        ddb->value = display->y0-display->y1;
+        f0->value = display->x0;
+        f1->value = display->x1;
+        df->value = fabs(display->x0 - display->x1);
+        sprintf(temp_hori, "P0 = %s,  P1 = %s,  ΔP = %s", db0->printVal(), db1->printVal(), ddb->printVal());
+        sprintf(temp_vert, "f0 = %s, f1 = %s,  Δf = %s", f0->printVal(), f1->printVal(), df->printVal());
+    }
+    else
+    {
+        v0->value = display->y0;
+        v1->value = display->y1;
+        dv->value = display->y0-display->y1;
+        t0->value = display->x0;
+        t1->value = display->x1;
+        dt->value = fabs(display->x0 - display->x1);
+        f->value = 1 / (display->x1 - display->x0);
+        sprintf(temp_hori, "V0 = %s,  V1 = %s,  ΔV = %s", v0->printVal(), v1->printVal(), dv->printVal());
+        sprintf(temp_vert, "t0 = %s, t1 = %s,  Δt = %s,  f = %s", t0->printVal(), t1->printVal(), dt->printVal(), f->printVal());
+    }
     sprintf(temp_separator, "\n");
 
     //sprintf(temp, "hello!");
@@ -748,11 +783,9 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
             */
             double const_displ_window = ((double)internalBuffer375_CH1->async_dft->n_samples)/(internalBuffer375_CH1->m_samplesPerSecond);
             double const_displ_delay = 0;
-            display->delay = const_displ_delay;
-            display->window = const_displ_window;
-            readData375_CH1 = internalBuffer375_CH1->readBuffer(display->window,GRAPH_SAMPLES,CH1_mode==2, display->delay + triggerDelay);
-            if(CH2_mode) readData375_CH2 = internalBuffer375_CH2->readBuffer(display->window,GRAPH_SAMPLES,CH2_mode==2, display->delay + triggerDelay);
-            if(CH1_mode == -1) readData750 = internalBuffer750->readBuffer(display->window,GRAPH_SAMPLES,false, display->delay + triggerDelay);
+            readData375_CH1 = internalBuffer375_CH1->readBuffer(const_displ_window,GRAPH_SAMPLES,CH1_mode==2, const_displ_delay + triggerDelay);
+            if(CH2_mode) readData375_CH2 = internalBuffer375_CH2->readBuffer(const_displ_window,GRAPH_SAMPLES,CH2_mode==2, const_displ_delay + triggerDelay);
+            if(CH1_mode == -1) readData750 = internalBuffer750->readBuffer(const_displ_window,GRAPH_SAMPLES,false, const_displ_delay + triggerDelay);
         }
         else
         {

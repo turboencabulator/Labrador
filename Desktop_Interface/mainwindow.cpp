@@ -2671,6 +2671,7 @@ void MainWindow::on_actionFrequency_Spectrum_triggered(bool checked)
         ui->actionFrequency_Response->setChecked(false);
     }
     ui->scopeGroup_CH2->setDisabled(false);
+    ui->controller_iso->display = checked ? ui->controller_iso->display1: ui->controller_iso->display0;
 
     if (checked == true)
         MAX_WINDOW_SIZE = 1<<17;
@@ -2696,6 +2697,7 @@ void MainWindow::on_actionFrequency_Response_triggered(bool checked)
     ui->scopeGroup_CH1->setCheckable(!checked);
     ui->scopeGroup_CH2->setCheckable(!checked);
     ui->scopeGroup_CH2->setDisabled(checked);
+    ui->controller_iso->display = checked ? ui->controller_iso->display2: ui->controller_iso->display0;
 }
 
 std::vector<uint8_t> MainWindow::uartEncode(const QString& text, UartParity parity)

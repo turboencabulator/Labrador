@@ -80,7 +80,10 @@ public:
     int baudRate_CH2 = 9600;
     double currentVmean;
     //Display Control Vars (Variables that control how the buffers are displayed)
-    DisplayControl *display = new DisplayControl(-0.1, 0, 2.5, -0.5);
+    DisplayControl *display0 = new DisplayControl(-0.1, 0, 2.5, -0.5);
+    DisplayControl *display1 = new DisplayControl(0, 375000, 90, -60);
+    DisplayControl *display2 = new DisplayControl(0, 62500, 90, -90);
+    DisplayControl *display = display0;
     //Generic Functions
     void setDriver(genericUsbDriver *newDriver);
     void setAxes(QCustomPlot *newAxes);
@@ -150,13 +153,11 @@ private:
     float *readDataFile;
     char *isoTemp = NULL;
     short *isoTemp_short = NULL;
-    siprint *v0;
-    siprint *v1;
-    siprint *dv;
-    siprint *t0;
-    siprint *t1;
-    siprint *dt;
-    siprint *f;
+    siprint *v0, *v1, *dv;
+    siprint *db0, *db1, *ddb;
+    siprint *dbmv0, *dbmv1, *ddbmv;
+    siprint *t0, *t1, *dt, *f;
+    siprint *f0, *f1, *df;
     //Scope/MM++ related variables
     double currentVmax;
     double currentVmin;
