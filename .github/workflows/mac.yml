@@ -26,8 +26,8 @@ jobs:
           mkdir -p bin/Labrador.app/Contents/Frameworks
           cp -r bin/firmware bin/Labrador.app/Contents/MacOS
           cp -r bin/waveforms bin/Labrador.app/Contents/MacOS
-          cp resources/iconfile.icns bin/Labrador.app/Contents/Resources
-          cp resources/Info.plist bin/Labrador.app/Contents
+          cp build_mac/iconfile.icns bin/Labrador.app/Contents/Resources
+          cp build_mac/Info.plist bin/Labrador.app/Contents
           macdeployqt bin/Labrador.app -dmg -libpath=build_mac/libdfuprog/lib/
 
       - name: Upload artifacts

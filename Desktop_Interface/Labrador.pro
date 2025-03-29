@@ -89,7 +89,7 @@ RESOURCES += \
 
 DESTDIR = bin
 
-RC_ICONS = appicon.ico
+RC_ICONS = build_win/appicon.ico
 
 INCLUDEPATH += $$PWD/ui_elements
 DEPENDPATH += $$PWD/ui_elements
@@ -178,16 +178,16 @@ unix:!android:!macx{
     waveforms.files += $$files(bin/waveforms/*)
 
     udev.path = /lib/udev/rules.d
-    udev.files = rules.d/69-labrador.rules
+    udev.files = build_linux/69-labrador.rules
 
     icon48.path = $$PREFIX/share/icons/hicolor/48x48/apps/
-    icon48.files += resources/icon48/espotek-labrador.png
+    icon48.files += build_linux/icon48/espotek-labrador.png
 
     icon256.path = $$PREFIX/share/icons/hicolor/256x256/apps/
-    icon256.files += resources/icon256/espotek-labrador.png
+    icon256.files += build_linux/icon256/espotek-labrador.png
 
     desktop.path = $$PREFIX/share/applications
-    desktop.files += resources/espotek-labrador.desktop
+    desktop.files += build_linux/espotek-labrador.desktop
 
     symlink.path = $$PREFIX/bin
     symlink.extra = ln -sf Labrador $(INSTALL_ROOT)$$PREFIX/bin/labrador
