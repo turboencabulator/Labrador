@@ -14,6 +14,9 @@
 #define PI_8 8*PI
 static constexpr int kSpectrumCounterMax = 4;
 
+#define HORICURSORENABLED ((~spectrum & ~freqResp & horiCursorEnabled0) | (spectrum & horiCursorEnabled1) | (freqResp & horiCursorEnabled2))
+#define VERTCURSORENABLED ((~spectrum & ~freqResp & vertCursorEnabled0) | (spectrum & vertCursorEnabled1) | (freqResp & vertCursorEnabled2))
+
 isoDriver::isoDriver(QWidget *parent) : QLabel(parent)
 {
     this->hide();
@@ -504,13 +507,13 @@ void isoDriver::setAutoGain(bool enabled){
 
 void isoDriver::graphMousePress(QMouseEvent *event){
     qDebug() << event->button();
-    if (horiCursorEnabled && (event->button() == Qt::LeftButton)){
+    if (HORICURSORENABLED && (event->button() == Qt::LeftButton)){
         placingHoriAxes = true;
         display->y0 = axes->yAxis->pixelToCoord(event->y());
 #ifndef PLATFORM_ANDROID
-    }else if(vertCursorEnabled && (event->button() == Qt::RightButton)){
+    }else if(VERTCURSORENABLED && (event->button() == Qt::RightButton)){
 #else
-    }if(vertCursorEnabled){
+    }if(VERTCURSORENABLED){
 #endif
         placingVertAxes = true;
         display->x0 = axes->xAxis->pixelToCoord(event->x());
@@ -519,12 +522,12 @@ void isoDriver::graphMousePress(QMouseEvent *event){
 }
 
 void isoDriver::graphMouseRelease(QMouseEvent *event){
-    if(horiCursorEnabled && placingHoriAxes && (event->button() == Qt::LeftButton)){
+    if(HORICURSORENABLED && placingHoriAxes && (event->button() == Qt::LeftButton)){
         placingHoriAxes = false;
 #ifndef PLATFORM_ANDROID
-    } else if (vertCursorEnabled && placingVertAxes && (event->button() == Qt::RightButton)){
+    } else if (VERTCURSORENABLED && placingVertAxes && (event->button() == Qt::RightButton)){
 #else
-    } if (vertCursorEnabled && placingVertAxes){
+    } if (VERTCURSORENABLED && placingVertAxes){
 #endif
         placingVertAxes = false;
     }
@@ -532,31 +535,42 @@ void isoDriver::graphMouseRelease(QMouseEvent *event){
 }
 
 void isoDriver::graphMouseMove(QMouseEvent *event){
-    if(horiCursorEnabled && placingHoriAxes){
+    if(HORICURSORENABLED && placingHoriAxes){
         display->y1 = axes->yAxis->pixelToCoord(event->y());
 #ifndef PLATFORM_ANDROID
-    } else if(vertCursorEnabled && placingVertAxes){
+    } else if(VERTCURSORENABLED && placingVertAxes){
 #else
-    } if(vertCursorEnabled && placingVertAxes){
+    } if(VERTCURSORENABLED && placingVertAxes){
 #endif
         display->x1 = axes->xAxis->pixelToCoord(event->x());
     }
 }
 
 void isoDriver::cursorEnableHori(bool enabled){
-    horiCursorEnabled = enabled;
+
+    if(spectrum)
+        horiCursorEnabled1 = enabled;
+    else if(freqResp)
+        horiCursorEnabled2 = enabled;
+    else
+        horiCursorEnabled0 = enabled;
     axes->graph(4)->setVisible(enabled);
     axes->graph(5)->setVisible(enabled);
 }
 
 void isoDriver::cursorEnableVert(bool enabled){
-    vertCursorEnabled = enabled;
+    if(spectrum)
+        vertCursorEnabled1 = enabled;
+    else if(freqResp)
+        vertCursorEnabled2 = enabled;
+    else
+        vertCursorEnabled0 = enabled;
     axes->graph(2)->setVisible(enabled);
     axes->graph(3)->setVisible(enabled);
 }
 
 void isoDriver::udateCursors(void){
-    if(!(vertCursorEnabled || horiCursorEnabled)){
+    if(!(VERTCURSORENABLED || HORICURSORENABLED)){
 #if QCP_VER == 1
         cursorTextPtr->setVisible(0);
 #endif
@@ -585,11 +599,11 @@ void isoDriver::udateCursors(void){
     hori1y[0] = display->y1;
     hori1y[1] = display->y1;
 
-    if(vertCursorEnabled){
+    if(VERTCURSORENABLED){
         axes->graph(2)->setData(vert0x, vert0y);
         axes->graph(3)->setData(vert1x, vert1y);
     }
-    if(horiCursorEnabled){
+    if(HORICURSORENABLED){
         axes->graph(4)->setData(hori0x, hori0y);
         axes->graph(5)->setData(hori1x, hori1y);
     }
@@ -640,9 +654,9 @@ void isoDriver::udateCursors(void){
     sprintf(temp_separator, "\n");
 
     //sprintf(temp, "hello!");
-    if(horiCursorEnabled) cursorStatsString->append(temp_hori);
-    if(horiCursorEnabled && vertCursorEnabled) cursorStatsString->append(temp_separator);
-    if(vertCursorEnabled) cursorStatsString->append(temp_vert);
+    if(HORICURSORENABLED) cursorStatsString->append(temp_hori);
+    if(HORICURSORENABLED && VERTCURSORENABLED) cursorStatsString->append(temp_separator);
+    if(VERTCURSORENABLED) cursorStatsString->append(temp_vert);
     //qDebug() << temp;
 #if QCP_VER == 1
     cursorTextPtr->setText(*(cursorStatsString));

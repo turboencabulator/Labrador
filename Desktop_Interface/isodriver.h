@@ -96,6 +96,12 @@ public:
     bool spectrum = false;
     bool freqResp = false;
     espoSpinBox *freqValue_CH1 = NULL;
+    bool horiCursorEnabled0 = false; // TODO: move into DisplayControl
+    bool horiCursorEnabled1 = false; // TODO: move into DisplayControl
+    bool horiCursorEnabled2 = false; // TODO: move into DisplayControl
+    bool vertCursorEnabled0 = false; // TODO: move into DisplayControl
+    bool vertCursorEnabled1 = false; // TODO: move into DisplayControl
+    bool vertCursorEnabled2 = false; // TODO: move into DisplayControl
 private:
     //Those bloody bools that just Enable/Disable a single property
     bool paused_CH1 = false;
@@ -104,8 +110,6 @@ private:
     bool autoGainEnabled = true;
     bool placingHoriAxes = false; // TODO: move into DisplayControl
     bool placingVertAxes = false; // TODO: move into DisplayControl
-    bool horiCursorEnabled = false; // TODO: move into DisplayControl
-    bool vertCursorEnabled = false; // TODO: move into DisplayControl
     bool triggerEnabled = false;
     bool singleShotEnabled = false;
     bool multimeterShow = true;

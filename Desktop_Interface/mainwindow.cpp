@@ -2673,6 +2673,14 @@ void MainWindow::on_actionFrequency_Spectrum_triggered(bool checked)
     ui->scopeGroup_CH2->setDisabled(false);
     ui->controller_iso->display = checked ? ui->controller_iso->display1: ui->controller_iso->display0;
 
+    if(checked){
+        ui->cursorHoriCheck->setChecked(ui->controller_iso->horiCursorEnabled1);
+        ui->cursorVertCheck->setChecked(ui->controller_iso->vertCursorEnabled1);
+    }else{
+        ui->cursorHoriCheck->setChecked(ui->controller_iso->horiCursorEnabled0);
+        ui->cursorVertCheck->setChecked(ui->controller_iso->vertCursorEnabled0);
+    }
+
     if (checked == true)
         MAX_WINDOW_SIZE = 1<<17;
     else
@@ -2698,6 +2706,14 @@ void MainWindow::on_actionFrequency_Response_triggered(bool checked)
     ui->scopeGroup_CH2->setCheckable(!checked);
     ui->scopeGroup_CH2->setDisabled(checked);
     ui->controller_iso->display = checked ? ui->controller_iso->display2: ui->controller_iso->display0;
+
+    if(checked){
+        ui->cursorHoriCheck->setChecked(ui->controller_iso->horiCursorEnabled2);
+        ui->cursorVertCheck->setChecked(ui->controller_iso->vertCursorEnabled2);
+    }else{
+        ui->cursorHoriCheck->setChecked(ui->controller_iso->horiCursorEnabled0);
+        ui->cursorVertCheck->setChecked(ui->controller_iso->vertCursorEnabled0);
+    }
 }
 
 std::vector<uint8_t> MainWindow::uartEncode(const QString& text, UartParity parity)
