@@ -12,7 +12,7 @@ jobs:
         include:
           - QT_ARCH: 'win64_msvc2019_64'
             PLATFORM: 'x64'
-            PLATFORM_ALT_NAME: 'x64'
+            PLATFORM_ALT_NAME: 'amd64'
             OUTPUT_BIN_DIR: 'bin64'
           - QT_ARCH: 'win32_msvc2019'
             PLATFORM: 'x86'
@@ -61,13 +61,14 @@ jobs:
           qmake CONFIG+=release INCLUDEPATH+="C:\ProgramData\chocolatey\lib\eigen\include\eigen3"
           nmake
 
-      # 6) Post-build steps: windeployqt, copy fftw DLL, etc.
+      # 6) Post-build steps: windeployqt, copy DLLs, etc.
       - name: Post-build steps
         working-directory: Desktop_Interface
         shell: cmd
         run: |
           windeployqt bin\Labrador.exe
-          xcopy /i /s /y "build_win\fftw\${{ matrix.PLATFORM_ALT_NAME }}"\libfftw3-3.dll bin
+          xcopy /i /s /y "build_win\fftw\${{ matrix.PLATFORM }}"\libfftw3-3.dll bin
+          xcopy /i /s /y "build_win\libusbk\bin\dll\${{ matrix.PLATFORM_ALT_NAME }}"\libusbK.dll bin
           del bin\vcredist*.exe
           del bin\*.pdb
 
