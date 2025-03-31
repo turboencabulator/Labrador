@@ -80,7 +80,7 @@ jobs:
 
       # 8) Optional: Push result to Labrador-win-builder
       - name: Publish update to Labrador-win-builder
-        if: success()
+        if: false
         shell: pwsh
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
