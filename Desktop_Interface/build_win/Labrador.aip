@@ -174,12 +174,16 @@
     <ROW File="labrafirm_0006_01.hex_1" Component_="flash.bat_1" FileName="LABRAF~8.HEX|labrafirm_0006_01.hex" Attributes="0" SourcePath="bin32\firmware\labrafirm_0006_01.hex" SelfReg="false" NextFile="labrafirm_0006_02.hex_1"/>
     <ROW File="labrafirm_0006_02.hex" Component_="flash.bat" FileName="LABRAF~9.HEX|labrafirm_0006_02.hex" Attributes="0" SourcePath="bin64\firmware\labrafirm_0006_02.hex" SelfReg="false" NextFile="wipe.bat"/>
     <ROW File="labrafirm_0006_02.hex_1" Component_="flash.bat_1" FileName="LABRAF~9.HEX|labrafirm_0006_02.hex" Attributes="0" SourcePath="bin32\firmware\labrafirm_0006_02.hex" SelfReg="false" NextFile="wipe.bat_1"/>
+    <ROW File="labrafirm_0007_01.hex" Component_="flash.bat" FileName="LABRA~10.HEX|labrafirm_0007_01.hex" Attributes="0" SourcePath="bin64\firmware\labrafirm_0007_01.hex" SelfReg="false" NextFile="labrafirm_0007_02.hex"/>
+    <ROW File="labrafirm_0007_01.hex_1" Component_="flash.bat_1" FileName="LABRA~10.HEX|labrafirm_0007_01.hex" Attributes="0" SourcePath="bin32\firmware\labrafirm_0007_01.hex" SelfReg="false" NextFile="labrafirm_0007_02.hex_1"/>
+    <ROW File="labrafirm_0007_02.hex" Component_="flash.bat" FileName="LABRA~11.HEX|labrafirm_0007_02.hex" Attributes="0" SourcePath="bin64\firmware\labrafirm_0007_02.hex" SelfReg="false" NextFile="labrafirm_0007_01.hex_1"/>
+    <ROW File="labrafirm_0007_02.hex_1" Component_="flash.bat_1" FileName="LABRA~11.HEX|labrafirm_0007_02.hex" Attributes="0" SourcePath="bin32\firmware\labrafirm_0007_02.hex" SelfReg="false"/>
     <ROW File="libEGL.dll" Component_="libEGL.dll" FileName="libEGL.dll" Attributes="0" SourcePath="bin64\libEGL.dll" SelfReg="false" NextFile="libGLESV2.dll"/>
     <ROW File="libEGL.dll_1" Component_="libEGL.dll_1" FileName="libEGL.dll" Attributes="0" SourcePath="bin32\libEGL.dll" SelfReg="false" NextFile="libGLESV2.dll_1"/>
     <ROW File="libGLESV2.dll" Component_="libGLESV2.dll" FileName="LIBGLE~1.DLL|libGLESV2.dll" Attributes="0" SourcePath="bin64\libGLESV2.dll" SelfReg="false" NextFile="opengl32sw.dll"/>
     <ROW File="libGLESV2.dll_1" Component_="libGLESV2.dll_1" FileName="LIBGLE~1.DLL|libGLESV2.dll" Attributes="0" SourcePath="bin32\libGLESV2.dll" SelfReg="false" NextFile="opengl32sw.dll_1"/>
     <ROW File="libfftw33.dll" Component_="libfftw33.dll" FileName="LIBFFT~1.DLL|libfftw3-3.dll" Attributes="0" SourcePath="bin32\libfftw3-3.dll" SelfReg="false" NextFile="libfftw33.dll_1"/>
-    <ROW File="libfftw33.dll_1" Component_="libfftw33.dll_1" FileName="LIBFFT~1.DLL|libfftw3-3.dll" Attributes="0" SourcePath="bin64\libfftw3-3.dll" SelfReg="false"/>
+    <ROW File="libfftw33.dll_1" Component_="libfftw33.dll_1" FileName="LIBFFT~1.DLL|libfftw3-3.dll" Attributes="0" SourcePath="bin64\libfftw3-3.dll" SelfReg="false" NextFile="labrafirm_0007_01.hex"/>
     <ROW File="libusbK.dll" Component_="libusbK.dll" FileName="libusbK.dll" Attributes="0" SourcePath="bin64\libusbK.dll" SelfReg="false" NextFile="libusbK.dll_1"/>
     <ROW File="libusbK.dll_1" Component_="libusbK.dll_1" FileName="libusbK.dll" Attributes="0" SourcePath="bin32\libusbK.dll" SelfReg="false" NextFile="dfuprogrammer.exe_1"/>
     <ROW File="opengl32sw.dll" Component_="opengl32sw.dll" FileName="OPENGL~1.DLL|opengl32sw.dll" Attributes="0" SourcePath="bin64\opengl32sw.dll" SelfReg="false" NextFile="Qt5Core.dll"/>
