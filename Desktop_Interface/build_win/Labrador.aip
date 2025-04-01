@@ -15,7 +15,7 @@
     <ROW Property="Manufacturer" Value="EspoTek"/>
     <ROW Property="ProductCode" Value="1033:{FAB73761-1B68-4E1F-B427-D3E4E0F569B5} " Type="16"/>
     <ROW Property="ProductLanguage" Value="1033"/>
-    <ROW Property="ProductName" Value="EspoTek Labrador"/>
+    <ROW Property="ProductName" Value="Labrador"/>
     <ROW Property="ProductVersion" Value="1.0.0" Type="32"/>
     <ROW Property="SecureCustomProperties" Value="OLDPRODUCTS;AI_NEWERPRODUCTFOUND;AI_SETUPEXEPATH;SETUPEXEDIR"/>
     <ROW Property="UpgradeCode" Value="{2FDD61FA-6454-40AA-BC77-684A153C4EAD}"/>
