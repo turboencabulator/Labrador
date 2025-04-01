@@ -22,13 +22,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 1) Install eigen
       - name: Install eigen
         shell: cmd
         run: |
           choco install eigen
 
-      # 2) Install Qt (5.15.2) for the desired MSVC2019 architecture
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
@@ -38,22 +36,11 @@ jobs:
           target: 'desktop'
           arch: '${{ matrix.QT_ARCH }}'
 
-      # 3) Activate the MSVC 2019 environment
       - name: Setup MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.PLATFORM }}
 
-      # 4) Debug step: Confirm cl, nmake, qmake are found
-      - name: Debug environment
-        shell: cmd
-        run: |
-          echo "PATH=%PATH%"
-          where cl
-          where nmake
-          where qmake
-
-      # 5) Build Labrador
       - name: Build Labrador
         working-directory: Desktop_Interface
         shell: cmd
@@ -61,8 +48,7 @@ jobs:
           qmake CONFIG+=release INCLUDEPATH+="C:\ProgramData\chocolatey\lib\eigen\include\eigen3"
           nmake
 
-      # 6) Post-build steps: windeployqt, copy DLLs, etc.
-      - name: Post-build steps
+      - name: Gather dependencies
         working-directory: Desktop_Interface
         shell: cmd
         run: |
@@ -70,8 +56,7 @@ jobs:
           xcopy /i /s /y "build_win\fftw\${{ matrix.PLATFORM }}"\libfftw3-3.dll bin
           xcopy /i /s /y "build_win\libusbk\bin\dll\${{ matrix.PLATFORM_ALT_NAME }}"\libusbK.dll bin
 
-      # 7) Upload artifact
-      - name: Upload Windows artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.OUTPUT_BIN_DIR }}
