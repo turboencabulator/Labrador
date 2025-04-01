@@ -75,27 +75,45 @@ jobs:
       - name: Upload Windows artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Labrador_${{ matrix.PLATFORM }}
+          name: ${{ matrix.OUTPUT_BIN_DIR }}
           path: Desktop_Interface/bin
 
-      # 8) Optional: Push result to Labrador-win-builder
-      - name: Publish update to Labrador-win-builder
-        if: false
+  build-installer:
+    needs:
+      - build-windows
+    runs-on: windows-2019
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+
+      - name: Download additional files
         shell: pwsh
-        env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          OUTPUT_BIN_DIR: ${{ matrix.OUTPUT_BIN_DIR }}
         run: |
-          mkdir C:\dev
-          cd C:\dev
-          git clone --depth 1 https://github.com/espotek-org/Labrador-win-builder
-          cd Labrador-win-builder
-          git config --global credential.helper store
-          Add-Content "$env:USERPROFILE\.git-credentials" "https://$env:ACCESS_TOKEN:x-oauth-basic@github.com`n"
-          git config --global user.email "admin@espotek.com"
-          git config --global user.name "Chris Esposito"
-          git checkout master
-          xcopy /i /s /y "%GITHUB_WORKSPACE%\Desktop_Interface\bin" $env:OUTPUT_BIN_DIR
-          git add $env:OUTPUT_BIN_DIR
-          git commit -a -m "Automatic update from main Labrador repository"
-          git push
+          Invoke-WebRequest -Uri "http://espotek.com/ai157.msi" -OutFile "ai157.msi"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/Labrador.aip" -OutFile "Labrador.aip"
+          mkdir "driver"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Bootloader_Install.exe" -OutFile "driver/Bootloader_Install.exe"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Driver_Install.exe" -OutFile "driver/Driver_Install.exe"
+          Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Gobindar_Install.exe" -OutFile "driver/Gobindar_Install.exe"
+          mkdir "Prerequisites/Visual C++ Redistributable for Visual Studio 2017"
+          Invoke-WebRequest -Uri "http://download.visualstudio.microsoft.com/download/pr/9fbed7c7-7012-4cc0-a0a3-a541f51981b5/e7eec15278b4473e26d7e32cef53a34c/vc_redist.x64.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2017/vc_redist.x64.exe"
+          Invoke-WebRequest -Uri "http://download.visualstudio.microsoft.com/download/pr/d0b808a8-aa78-4250-8e54-49b8c23f7328/9c5e6532055786367ee61aafb3313c95/vc_redist.x86.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2017/vc_redist.x86.exe"
+
+      - name: Install Advanced Installer
+        shell: cmd
+        run: |
+          msiexec /i ai157.msi /qn
+          rm ai157.msi
+
+      - name: Build installer
+        shell: cmd
+        run: |
+          "C:/Program Files (x86)/Caphyon/Advanced Installer 15.7/bin/x86/AdvancedInstaller.com" /rebuild Labrador.aip
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: exe
+          path: Labrador-SetupFiles/Labrador_Installer.exe
+          compression-level: 0
+          if-no-files-found: error
