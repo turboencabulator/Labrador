@@ -177,7 +177,7 @@
     <ROW File="labrafirm_0007_01.hex" Component_="flash.bat" FileName="LABRA~10.HEX|labrafirm_0007_01.hex" Attributes="0" SourcePath="bin64\firmware\labrafirm_0007_01.hex" SelfReg="false" NextFile="labrafirm_0007_02.hex"/>
     <ROW File="labrafirm_0007_01.hex_1" Component_="flash.bat_1" FileName="LABRA~10.HEX|labrafirm_0007_01.hex" Attributes="0" SourcePath="bin32\firmware\labrafirm_0007_01.hex" SelfReg="false" NextFile="labrafirm_0007_02.hex_1"/>
     <ROW File="labrafirm_0007_02.hex" Component_="flash.bat" FileName="LABRA~11.HEX|labrafirm_0007_02.hex" Attributes="0" SourcePath="bin64\firmware\labrafirm_0007_02.hex" SelfReg="false" NextFile="labrafirm_0007_01.hex_1"/>
-    <ROW File="labrafirm_0007_02.hex_1" Component_="flash.bat_1" FileName="LABRA~11.HEX|labrafirm_0007_02.hex" Attributes="0" SourcePath="bin32\firmware\labrafirm_0007_02.hex" SelfReg="false"/>
+    <ROW File="labrafirm_0007_02.hex_1" Component_="flash.bat_1" FileName="LABRA~11.HEX|labrafirm_0007_02.hex" Attributes="0" SourcePath="bin32\firmware\labrafirm_0007_02.hex" SelfReg="false" NextFile="qt_tr.qm"/>
     <ROW File="libEGL.dll" Component_="libEGL.dll" FileName="libEGL.dll" Attributes="0" SourcePath="bin64\libEGL.dll" SelfReg="false" NextFile="libGLESV2.dll"/>
     <ROW File="libEGL.dll_1" Component_="libEGL.dll_1" FileName="libEGL.dll" Attributes="0" SourcePath="bin32\libEGL.dll" SelfReg="false" NextFile="libGLESV2.dll_1"/>
     <ROW File="libGLESV2.dll" Component_="libGLESV2.dll" FileName="LIBGLE~1.DLL|libGLESV2.dll" Attributes="0" SourcePath="bin64\libGLESV2.dll" SelfReg="false" NextFile="opengl32sw.dll"/>
@@ -240,8 +240,12 @@
     <ROW File="qt_ru.qm_1" Component_="qt_ar.qm_1" FileName="qt_ru.qm" Attributes="0" SourcePath="bin32\translations\qt_ru.qm" SelfReg="false" NextFile="qt_sk.qm_1"/>
     <ROW File="qt_sk.qm" Component_="qt_ar.qm" FileName="qt_sk.qm" Attributes="0" SourcePath="bin64\translations\qt_sk.qm" SelfReg="false" NextFile="qt_uk.qm"/>
     <ROW File="qt_sk.qm_1" Component_="qt_ar.qm_1" FileName="qt_sk.qm" Attributes="0" SourcePath="bin32\translations\qt_sk.qm" SelfReg="false" NextFile="qt_uk.qm_1"/>
+    <ROW File="qt_tr.qm" Component_="qt_ar.qm" FileName="qt_tr.qm" Attributes="0" SourcePath="bin64\translations\qt_tr.qm" SelfReg="false" NextFile="qt_zh_TW.qm"/>
+    <ROW File="qt_tr.qm_1" Component_="qt_ar.qm_1" FileName="qt_tr.qm" Attributes="0" SourcePath="bin32\translations\qt_tr.qm" SelfReg="false" NextFile="qt_zh_TW.qm_1"/>
     <ROW File="qt_uk.qm" Component_="qt_ar.qm" FileName="qt_uk.qm" Attributes="0" SourcePath="bin64\translations\qt_uk.qm" SelfReg="false" NextFile="flash.bat_1"/>
     <ROW File="qt_uk.qm_1" Component_="qt_ar.qm_1" FileName="qt_uk.qm" Attributes="0" SourcePath="bin32\translations\qt_uk.qm" SelfReg="false" NextFile="DC.tlw_1"/>
+    <ROW File="qt_zh_TW.qm" Component_="qt_ar.qm" FileName="qt_zh_TW.qm" Attributes="0" SourcePath="bin64\translations\qt_zh_TW.qm" SelfReg="false" NextFile="qt_tr.qm_1"/>
+    <ROW File="qt_zh_TW.qm_1" Component_="qt_ar.qm_1" FileName="qt_zh_TW.qm" Attributes="0" SourcePath="bin32\translations\qt_zh_TW.qm" SelfReg="false"/>
     <ROW File="qtga.dll" Component_="qtga.dll" FileName="qtga.dll" Attributes="0" SourcePath="bin64\imageformats\qtga.dll" SelfReg="false" NextFile="qtiff.dll"/>
     <ROW File="qtga.dll_1" Component_="qtga.dll_1" FileName="qtga.dll" Attributes="0" SourcePath="bin32\imageformats\qtga.dll" SelfReg="false" NextFile="qtiff.dll_1"/>
     <ROW File="qtiff.dll" Component_="qtiff.dll" FileName="qtiff.dll" Attributes="0" SourcePath="bin64\imageformats\qtiff.dll" SelfReg="false" NextFile="qwbmp.dll"/>
