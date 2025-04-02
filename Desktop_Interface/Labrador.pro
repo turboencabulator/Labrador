@@ -137,30 +137,17 @@ unix:!android:!macx{
     PKGCONFIG += libusb-1.0  ##make sure you have the libusb-1.0-0-dev package!
     PKGCONFIG += fftw3       ##make sure you have the libfftw3-dev package!
     PKGCONFIG += eigen3      ##make sure you have the libeigen3-dev package!
-    contains(QT_ARCH, aarch32) {
-        message("Building for Raspberry Pi-32 bit")
+    contains(QT_ARCH, arm) | contains(QT_ARCH, arm64) {
+        message("Building for Raspberry Pi ($${QT_ARCH})")
         #libdfuprog include
-        LIBS += -L$$PWD/build_linux/libdfuprog/lib/arm32 -ldfuprog-0.9
+        LIBS += -L$$PWD/build_linux/libdfuprog/lib/$${QT_ARCH} -ldfuprog-0.9
         INCLUDEPATH += $$PWD/build_linux/libdfuprog/include
         DEPENDPATH += $$PWD/build_linux/libdfuprog/include
         QMAKE_CFLAGS += -fsigned-char
         QMAKE_CXXFLAGS += -fsigned-char
         DEFINES += "PLATFORM_RASPBERRY_PI"
         #All ARM-Linux GCC treats char as unsigned by default???
-        lib_deploy.files = $$PWD/build_linux/libdfuprog/lib/arm32/libdfuprog-0.9.so
-        lib_deploy.path = $$PREFIX/lib
-
-    } else:contains(QT_ARCH, aarch64) {
-        message("Building for Raspberry Pi-64 bit")
-        #libdfuprog include
-        LIBS += -L$$PWD/build_linux/libdfuprog/lib/arm64 -ldfuprog-0.9
-        INCLUDEPATH += $$PWD/build_linux/libdfuprog/include
-        DEPENDPATH += $$PWD/build_linux/libdfuprog/include
-        QMAKE_CFLAGS += -fsigned-char
-        QMAKE_CXXFLAGS += -fsigned-char
-        DEFINES += "PLATFORM_RASPBERRY_PI"
-        #All ARM-Linux GCC treats char as unsigned by default???
-        lib_deploy.files = $$PWD/build_linux/libdfuprog/lib/arm64/libdfuprog-0.9.so
+        lib_deploy.files = $$PWD/build_linux/libdfuprog/lib/$${QT_ARCH}/libdfuprog-0.9.so
         lib_deploy.path = $$PREFIX/lib
 
     } else:contains(QT_ARCH, i386) {
