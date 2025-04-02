@@ -13,6 +13,9 @@
 #define PI_8 8*PI
 static constexpr int kSpectrumCounterMax = 4;
 
+#define HORICURSORENABLED ((~spectrum & ~freqResp & horiCursorEnabled0) | (spectrum & horiCursorEnabled1) | (freqResp & horiCursorEnabled2))
+#define VERTCURSORENABLED ((~spectrum & ~freqResp & vertCursorEnabled0) | (spectrum & vertCursorEnabled1) | (freqResp & vertCursorEnabled2))
+
 isoDriver::isoDriver(QWidget *parent) : QLabel(parent)
 {
     this->hide();
@@ -23,16 +26,27 @@ isoDriver::isoDriver(QWidget *parent) : QLabel(parent)
     isoTemp = (char *) malloc(TIMER_PERIOD*ADC_SPF + 8); //8-byte header contains (unsigned long) length
 
     char volts[2] = "V";
+    char decibel[3] = "dB";
+    char decibelmv[5] = "dBmV";
     char seconds[2] = "s";
     char hertz[3] = "Hz";
 
-    v0 = new siprint(volts, 1234);
+    v0 = new siprint(volts, 0);
     v1 = new siprint(volts, 0);
     dv = new siprint(volts, 0);
+    db0 = new siprint(decibel, 0);
+    db1 = new siprint(decibel, 0);
+    ddb = new siprint(decibel, 0);
+    dbmv0 = new siprint(decibelmv, 0);
+    dbmv1 = new siprint(decibelmv, 0);
+    ddbmv = new siprint(decibelmv, 0);
     t0 = new siprint(seconds, 0);
     t1 = new siprint(seconds, 0);
     dt = new siprint(seconds, 0);
     f = new siprint(hertz, 0);
+    f0 = new siprint(hertz, 0);
+    f1 = new siprint(hertz, 0);
+    df = new siprint(hertz, 0);
 
     startTimer();
 
@@ -217,8 +231,8 @@ void isoDriver::analogConvert(short *shortPtr, QVector<double> *doublePtr, int T
 void isoDriver::digitalConvert(short *shortPtr, QVector<double> *doublePtr){
 
     double *data = doublePtr->data();
-    double top = display.topRange - (display.topRange - display.botRange) / 10;
-    double bot = display.botRange + (display.topRange - display.botRange) / 10;
+    double top = display->topRange - (display->topRange - display->botRange) / 10;
+    double bot = display->botRange + (display->topRange - display->botRange) / 10;
     for (int i=0;i<GRAPH_SAMPLES;i++){
         data[i] = shortPtr[i] ? top : bot;
     }
@@ -296,16 +310,23 @@ void isoDriver::setVisible_CH2(bool visible){
 
 void isoDriver::setVoltageRange(QWheelEvent* event)
 {
-    if(doNotTouchGraph && !fileModeEnabled) return;
+    if((doNotTouchGraph && !fileModeEnabled) || spectrum || freqResp) return;
 
     bool isProperlyPaused = properlyPaused();
     double maxWindowSize = fileModeEnabled ? daq_maxWindowSize : ((double)MAX_WINDOW_SIZE);
 
-    display.setVoltageRange(event, isProperlyPaused, maxWindowSize, axes);
+    display->setVoltageRange(event, isProperlyPaused, maxWindowSize, axes);
 
     if (!(event->modifiers() == Qt::ControlModifier))
         if (autoGainEnabled && !isProperlyPaused)
             autoGain();
+}
+
+DisplayControl::DisplayControl(double left, double right, double top, double bottom)
+{
+    window = right-left;
+    topRange = top;
+    botRange = bottom;
 }
 
 void DisplayControl::setVoltageRange (QWheelEvent* event, bool isProperlyPaused, double maxWindowSize, QCustomPlot* axes)
@@ -410,8 +431,8 @@ void isoDriver::pauseEnable_CH1(bool enabled){
     paused_CH1 = enabled;
 
     if(!properlyPaused()) {
-        display.delay = 0;
-        delayUpdated(display.delay);
+        display->delay = 0;
+        delayUpdated(display->delay);
         if (autoGainEnabled) autoGain();
     }
 
@@ -424,8 +445,8 @@ void isoDriver::pauseEnable_CH2(bool enabled){
     paused_CH2 = enabled;
 
     if(!properlyPaused()){
-        display.delay = 0;
-        delayUpdated(display.delay);
+        display->delay = 0;
+        delayUpdated(display->delay);
         if (autoGainEnabled) autoGain();
     }
 
@@ -436,8 +457,8 @@ void isoDriver::pauseEnable_multimeter(bool enabled){
     paused_multimeter = enabled;
 
     if(!properlyPaused()) {
-        display.delay = 0;
-        delayUpdated(display.delay);
+        display->delay = 0;
+        delayUpdated(display->delay);
     }
 
     if(!enabled) clearBuffers(1,0,0);
@@ -446,8 +467,8 @@ void isoDriver::pauseEnable_multimeter(bool enabled){
 
 
 void isoDriver::autoGain(){
-    double maxgain = vcc / (2 * ((double)display.topRange - vref) * R4/(R3+R4));
-    double mingain = vcc / (2 * ((double)display.botRange - vref) * R4/(R3+R4));
+    double maxgain = vcc / (2 * ((double)display->topRange - vref) * R4/(R3+R4));
+    double mingain = vcc / (2 * ((double)display->botRange - vref) * R4/(R3+R4));
     maxgain = fmin(fabs(mingain) * 0.98, fabs(maxgain) * 0.98);
 
     double snap[8] = {64, 32, 16, 8, 4, 2, 1, 0.5};
@@ -485,59 +506,70 @@ void isoDriver::setAutoGain(bool enabled){
 
 void isoDriver::graphMousePress(QMouseEvent *event){
     qDebug() << event->button();
-    if (horiCursorEnabled && (event->button() == Qt::LeftButton)){
+    if (HORICURSORENABLED && (event->button() == Qt::LeftButton)){
         placingHoriAxes = true;
-        display.y0 = axes->yAxis->pixelToCoord(event->y());
+        display->y0 = axes->yAxis->pixelToCoord(event->y());
 #ifndef PLATFORM_ANDROID
-    }else if(vertCursorEnabled && (event->button() == Qt::RightButton)){
+    }else if(VERTCURSORENABLED && (event->button() == Qt::RightButton)){
 #else
-    }if(vertCursorEnabled){
+    }if(VERTCURSORENABLED){
 #endif
         placingVertAxes = true;
-        display.x0 = axes->xAxis->pixelToCoord(event->x());
+        display->x0 = axes->xAxis->pixelToCoord(event->x());
     }
-    qDebug() << "x0 =" << display.x0 << "x1 =" << display.x1 << "y0 =" << display.y0 << "y1 =" << display.y1;
+    qDebug() << "x0 =" << display->x0 << "x1 =" << display->x1 << "y0 =" << display->y0 << "y1 =" << display->y1;
 }
 
 void isoDriver::graphMouseRelease(QMouseEvent *event){
-    if(horiCursorEnabled && placingHoriAxes && (event->button() == Qt::LeftButton)){
+    if(HORICURSORENABLED && placingHoriAxes && (event->button() == Qt::LeftButton)){
         placingHoriAxes = false;
 #ifndef PLATFORM_ANDROID
-    } else if (vertCursorEnabled && placingVertAxes && (event->button() == Qt::RightButton)){
+    } else if (VERTCURSORENABLED && placingVertAxes && (event->button() == Qt::RightButton)){
 #else
-    } if (vertCursorEnabled && placingVertAxes){
+    } if (VERTCURSORENABLED && placingVertAxes){
 #endif
         placingVertAxes = false;
     }
-    qDebug() << "x0 =" << display.x0 << "x1 =" << display.x1 << "y0 =" << display.y0 << "y1 =" << display.y1;
+    qDebug() << "x0 =" << display->x0 << "x1 =" << display->x1 << "y0 =" << display->y0 << "y1 =" << display->y1;
 }
 
 void isoDriver::graphMouseMove(QMouseEvent *event){
-    if(horiCursorEnabled && placingHoriAxes){
-        display.y1 = axes->yAxis->pixelToCoord(event->y());
+    if(HORICURSORENABLED && placingHoriAxes){
+        display->y1 = axes->yAxis->pixelToCoord(event->y());
 #ifndef PLATFORM_ANDROID
-    } else if(vertCursorEnabled && placingVertAxes){
+    } else if(VERTCURSORENABLED && placingVertAxes){
 #else
-    } if(vertCursorEnabled && placingVertAxes){
+    } if(VERTCURSORENABLED && placingVertAxes){
 #endif
-        display.x1 = axes->xAxis->pixelToCoord(event->x());
+        display->x1 = axes->xAxis->pixelToCoord(event->x());
     }
 }
 
 void isoDriver::cursorEnableHori(bool enabled){
-    horiCursorEnabled = enabled;
+
+    if(spectrum)
+        horiCursorEnabled1 = enabled;
+    else if(freqResp)
+        horiCursorEnabled2 = enabled;
+    else
+        horiCursorEnabled0 = enabled;
     axes->graph(4)->setVisible(enabled);
     axes->graph(5)->setVisible(enabled);
 }
 
 void isoDriver::cursorEnableVert(bool enabled){
-    vertCursorEnabled = enabled;
+    if(spectrum)
+        vertCursorEnabled1 = enabled;
+    else if(freqResp)
+        vertCursorEnabled2 = enabled;
+    else
+        vertCursorEnabled0 = enabled;
     axes->graph(2)->setVisible(enabled);
     axes->graph(3)->setVisible(enabled);
 }
 
 void isoDriver::udateCursors(void){
-    if(!(vertCursorEnabled || horiCursorEnabled)){
+    if(!(VERTCURSORENABLED || HORICURSORENABLED)){
 #if QCP_VER == 1
         cursorTextPtr->setVisible(0);
 #endif
@@ -546,31 +578,31 @@ void isoDriver::udateCursors(void){
 
     QVector<double> vert0x(2), vert1x(2), hori0x(2), hori1x(2), vert0y(2), vert1y(2), hori0y(2), hori1y(2);
 
-    vert0x[0] = display.x0;
-    vert0x[1] = display.x0;
-    vert0y[0] = display.botRange;
-    vert0y[1] = display.topRange;
+    vert0x[0] = display->x0;
+    vert0x[1] = display->x0;
+    vert0y[0] = display->botRange;
+    vert0y[1] = display->topRange;
 
-    vert1x[0] = display.x1;
-    vert1x[1] = display.x1;
-    vert1y[0] = display.botRange;
-    vert1y[1] = display.topRange;
+    vert1x[0] = display->x1;
+    vert1x[1] = display->x1;
+    vert1y[0] = display->botRange;
+    vert1y[1] = display->topRange;
 
-    hori0x[0] = -display.window - display.delay;
-    hori0x[1] = -display.delay;
-    hori0y[0] = display.y0;
-    hori0y[1] = display.y0;
+    hori0x[0] = (spectrum || freqResp) ? 0 : -display->window - display->delay;
+    hori0x[1] = (spectrum || freqResp) ? display->window : -display->delay;
+    hori0y[0] = display->y0;
+    hori0y[1] = display->y0;
 
-    hori1x[0] = -display.window - display.delay;
-    hori1x[1] = -display.delay;
-    hori1y[0] = display.y1;
-    hori1y[1] = display.y1;
+    hori1x[0] = (spectrum || freqResp) ? 0 : -display->window - display->delay;
+    hori1x[1] = (spectrum || freqResp) ? display->window : -display->delay;
+    hori1y[0] = display->y1;
+    hori1y[1] = display->y1;
 
-    if(vertCursorEnabled){
+    if(VERTCURSORENABLED){
         axes->graph(2)->setData(vert0x, vert0y);
         axes->graph(3)->setData(vert1x, vert1y);
     }
-    if(horiCursorEnabled){
+    if(HORICURSORENABLED){
         axes->graph(4)->setData(hori0x, hori0y);
         axes->graph(5)->setData(hori1x, hori1y);
     }
@@ -581,25 +613,49 @@ void isoDriver::udateCursors(void){
 
     QString *cursorStatsString = new QString();
 
-    v0->value = display.y0;
-    v1->value = display.y1;
-    dv->value = display.y0-display.y1;
-    t0->value = display.x0;
-    t1->value = display.x1;
-    dt->value = fabs(display.x0 - display.x1);
-    f->value = 1 / (display.x1 - display.x0);
-
     char temp_hori[64];
     char temp_vert[64];
     char temp_separator[2];
-    sprintf(temp_hori, "V0 = %s,  V1 = %s,  ΔV = %s", v0->printVal(), v1->printVal(), dv->printVal());
-    sprintf(temp_vert, "t0 = %s, t1 = %s,  Δt = %s,  f = %s", t0->printVal(), t1->printVal(), dt->printVal(), f->printVal());
+    if(spectrum)
+    {
+        dbmv0->value = display->y0;
+        dbmv1->value = display->y1;
+        ddbmv->value = display->y0-display->y1;
+        f0->value = display->x0;
+        f1->value = display->x1;
+        df->value = fabs(display->x0 - display->x1);
+        sprintf(temp_hori, "P0 = %s,  P1 = %s,  ΔP = %s", dbmv0->printVal(), dbmv1->printVal(), ddbmv->printVal());
+        sprintf(temp_vert, "f0 = %s, f1 = %s,  Δf = %s", f0->printVal(), f1->printVal(), df->printVal());
+    }
+    else if(freqResp)
+    {
+        db0->value = display->y0;
+        db1->value = display->y1;
+        ddb->value = display->y0-display->y1;
+        f0->value = display->x0;
+        f1->value = display->x1;
+        df->value = fabs(display->x0 - display->x1);
+        sprintf(temp_hori, "P0 = %s,  P1 = %s,  ΔP = %s", db0->printVal(), db1->printVal(), ddb->printVal());
+        sprintf(temp_vert, "f0 = %s, f1 = %s,  Δf = %s", f0->printVal(), f1->printVal(), df->printVal());
+    }
+    else
+    {
+        v0->value = display->y0;
+        v1->value = display->y1;
+        dv->value = display->y0-display->y1;
+        t0->value = display->x0;
+        t1->value = display->x1;
+        dt->value = fabs(display->x0 - display->x1);
+        f->value = 1 / (display->x1 - display->x0);
+        sprintf(temp_hori, "V0 = %s,  V1 = %s,  ΔV = %s", v0->printVal(), v1->printVal(), dv->printVal());
+        sprintf(temp_vert, "t0 = %s, t1 = %s,  Δt = %s,  f = %s", t0->printVal(), t1->printVal(), dt->printVal(), f->printVal());
+    }
     sprintf(temp_separator, "\n");
 
     //sprintf(temp, "hello!");
-    if(horiCursorEnabled) cursorStatsString->append(temp_hori);
-    if(horiCursorEnabled && vertCursorEnabled) cursorStatsString->append(temp_separator);
-    if(vertCursorEnabled) cursorStatsString->append(temp_vert);
+    if(HORICURSORENABLED) cursorStatsString->append(temp_hori);
+    if(HORICURSORENABLED && VERTCURSORENABLED) cursorStatsString->append(temp_separator);
+    if(VERTCURSORENABLED) cursorStatsString->append(temp_vert);
     //qDebug() << temp;
 #if QCP_VER == 1
     cursorTextPtr->setText(*(cursorStatsString));
@@ -717,7 +773,7 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
     if (triggerEnabled)
     {
 		isoBuffer* internalBuffer_CH1 = (CH1_mode == -1) ? internalBuffer750 : internalBuffer375_CH1;
-        triggerDelay = (triggerMode < 2) ? internalBuffer_CH1->getDelayedTriggerPoint(display.window) - display.window : internalBuffer375_CH2->getDelayedTriggerPoint(display.window) - display.window;
+        triggerDelay = (triggerMode < 2) ? internalBuffer_CH1->getDelayedTriggerPoint(display->window) - display->window : internalBuffer375_CH2->getDelayedTriggerPoint(display->window) - display->window;
 
         if (triggerDelay < 0)
             triggerDelay = 0;
@@ -726,10 +782,10 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
     if(singleShotEnabled && (triggerDelay != 0))
         singleShotTriggered(1);
     if (!spectrum && !freqResp) {
-        readData375_CH1 = internalBuffer375_CH1->readBuffer(display.window,GRAPH_SAMPLES,CH1_mode==2, display.delay + triggerDelay);
-        if(CH2_mode) readData375_CH2 = internalBuffer375_CH2->readBuffer(display.window,GRAPH_SAMPLES,CH2_mode==2, display.delay + triggerDelay);
-        if(CH1_mode == -1) readData750 = internalBuffer750->readBuffer(display.window,GRAPH_SAMPLES,false, display.delay + triggerDelay);
-        if(CH1_mode == -2) readDataFile = internalBufferFile->readBuffer(display.window,GRAPH_SAMPLES,false, display.delay);
+        readData375_CH1 = internalBuffer375_CH1->readBuffer(display->window,GRAPH_SAMPLES,CH1_mode==2, display->delay + triggerDelay);
+        if(CH2_mode) readData375_CH2 = internalBuffer375_CH2->readBuffer(display->window,GRAPH_SAMPLES,CH2_mode==2, display->delay + triggerDelay);
+        if(CH1_mode == -1) readData750 = internalBuffer750->readBuffer(display->window,GRAPH_SAMPLES,false, display->delay + triggerDelay);
+        if(CH1_mode == -2) readDataFile = internalBufferFile->readBuffer(display->window,GRAPH_SAMPLES,false, display->delay);
     } else {
         if(spectrum)
         {
@@ -740,11 +796,9 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
             */
             double const_displ_window = ((double)internalBuffer375_CH1->async_dft->n_samples)/(internalBuffer375_CH1->m_samplesPerSecond);
             double const_displ_delay = 0;
-            display.delay = const_displ_delay;
-            display.window = const_displ_window;
-            readData375_CH1 = internalBuffer375_CH1->readBuffer(display.window,GRAPH_SAMPLES,CH1_mode==2, display.delay + triggerDelay);
-            if(CH2_mode) readData375_CH2 = internalBuffer375_CH2->readBuffer(display.window,GRAPH_SAMPLES,CH2_mode==2, display.delay + triggerDelay);
-            if(CH1_mode == -1) readData750 = internalBuffer750->readBuffer(display.window,GRAPH_SAMPLES,false, display.delay + triggerDelay);
+            readData375_CH1 = internalBuffer375_CH1->readBuffer(const_displ_window,GRAPH_SAMPLES,CH1_mode==2, const_displ_delay + triggerDelay);
+            if(CH2_mode) readData375_CH2 = internalBuffer375_CH2->readBuffer(const_displ_window,GRAPH_SAMPLES,CH2_mode==2, const_displ_delay + triggerDelay);
+            if(CH1_mode == -1) readData750 = internalBuffer750->readBuffer(const_displ_window,GRAPH_SAMPLES,false, const_displ_delay + triggerDelay);
         }
         else
         {
@@ -888,7 +942,7 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
 
 
     for (double i=0; i<GRAPH_SAMPLES; i++){
-        x[i] = -(display.window*i)/((double)(GRAPH_SAMPLES-1)) - display.delay;
+        x[i] = -(display->window*i)/((double)(GRAPH_SAMPLES-1)) - display->delay;
         if (x[i]>0) {
             CH1[i] = 0;
             CH2[i] = 0;
@@ -1071,8 +1125,8 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
             if(CH2_mode) axes->graph(1)->setData(x,CH2);
             axes->xAxis->setLabel("Time (sec)");
             axes->yAxis->setLabel("Voltage (V)");
-            axes->xAxis->setRange(-display.window - display.delay, -display.delay);
-            axes->yAxis->setRange(display.topRange, display.botRange);
+            axes->xAxis->setRange(-display->window - display->delay, -display->delay);
+            axes->yAxis->setRange(display->topRange, display->botRange);
         }
         axes->xAxis->setLabelColor(Qt::white);
         axes->yAxis->setLabelColor(Qt::white);
@@ -1120,7 +1174,7 @@ void isoDriver::multimeterAction(){
     double triggerDelay = 0;
     if (triggerEnabled)
     {
-        triggerDelay = internalBuffer375_CH1->getDelayedTriggerPoint(display.window) - display.window;
+        triggerDelay = internalBuffer375_CH1->getDelayedTriggerPoint(display->window) - display->window;
 
         if (triggerDelay < 0)
             triggerDelay = 0;
@@ -1129,13 +1183,13 @@ void isoDriver::multimeterAction(){
     if(singleShotEnabled && (triggerDelay != 0))
         singleShotTriggered(1);
 
-    readData375_CH1 = internalBuffer375_CH1->readBuffer(display.window,GRAPH_SAMPLES, false, display.delay + triggerDelay);
+    readData375_CH1 = internalBuffer375_CH1->readBuffer(display->window,GRAPH_SAMPLES, false, display->delay + triggerDelay);
 
     QVector<double> x(GRAPH_SAMPLES), CH1(GRAPH_SAMPLES);
     analogConvert(readData375_CH1.get(), &CH1, 2048, 0, 1);  //No AC coupling!
 
     for (double i=0; i<GRAPH_SAMPLES; i++){
-        x[i] = -(display.window*i)/((double)(GRAPH_SAMPLES-1)) - display.delay;
+        x[i] = -(display->window*i)/((double)(GRAPH_SAMPLES-1)) - display->delay;
         if (x[i]>0) {
             CH1[i] = 0;
         }
@@ -1144,8 +1198,8 @@ void isoDriver::multimeterAction(){
 
     udateCursors();
 
-    axes->xAxis->setRange(-display.window - display.delay, -display.delay);
-    axes->yAxis->setRange(display.topRange, display.botRange);
+    axes->xAxis->setRange(-display->window - display->delay, -display->delay);
+    axes->yAxis->setRange(display->topRange, display->botRange);
 
     axes->replot();
     multimeterStats();
@@ -1532,25 +1586,25 @@ void isoDriver::slowTimerTick(){
 void isoDriver::setTopRange(double newTop)
 {
     // NOTE: Should this be clamped to 20?
-    display.topRange = newTop;
-    topRangeUpdated(display.topRange);
+    display->topRange = newTop;
+    topRangeUpdated(display->topRange);
 }
 
 void isoDriver::setBotRange(double newBot)
 {
     // NOTE: Should this be clamped to 20?
-    display.botRange = newBot;
-    botRangeUpdated(display.botRange);
+    display->botRange = newBot;
+    botRangeUpdated(display->botRange);
 }
 
 void isoDriver::setTimeWindow(double newWindow){
-    display.window = newWindow;
-    timeWindowUpdated(display.window);
+    display->window = newWindow;
+    timeWindowUpdated(display->window);
 }
 
 void isoDriver::setDelay(double newDelay){
-    display.delay = newDelay;
-    delayUpdated(display.delay);
+    display->delay = newDelay;
+    delayUpdated(display->delay);
 }
 
 void isoDriver::takeSnapshot(QString *fileName, unsigned char channel){
@@ -1773,20 +1827,20 @@ void isoDriver::disableFileMode(){
 
     //Shrink screen back, if necessary.
     double mws = fileModeEnabled ? daq_maxWindowSize : ((double)MAX_WINDOW_SIZE);
-    if (display.window > mws)
+    if (display->window > mws)
     {
-        display.window = mws;
-        timeWindowUpdated(display.window);
+        display->window = mws;
+        timeWindowUpdated(display->window);
     }
-    if ((display.window + display.delay) > mws)
+    if ((display->window + display->delay) > mws)
     {
-        display.delay -= display.window + display.delay - mws;
-        delayUpdated(display.delay);
+        display->delay -= display->window + display->delay - mws;
+        delayUpdated(display->delay);
     }
-    if (display.delay < 0)
+    if (display->delay < 0)
     {
-        display.delay = 0;
-        delayUpdated(display.delay);
+        display->delay = 0;
+        delayUpdated(display->delay);
     }
 }
 
