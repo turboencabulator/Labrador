@@ -159,7 +159,7 @@ std::unique_ptr<short[]> isoBuffer::readBuffer(double sampleWindow, int numSampl
         if (singleBit)
         {
             int subIdx = 8*(-itr-floor(-itr));
-            readData[i] &= (1 << subIdx);
+            readData[i] = data_lb & (1 << subIdx);
         }
 
         itr += timeBetweenSamples;
