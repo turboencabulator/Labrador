@@ -227,7 +227,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
 
 
-    connect(ui->pausedLabeL_CH1, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
+    connect(ui->pausedLabel_CH1, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
     connect(ui->pausedLabel_CH2, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
     connect(ui->pause_LA, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
     connect(ui->multimeterPauseCheckBox, SIGNAL(toggled(bool)), this, SLOT(paused(bool)));
@@ -1559,7 +1559,7 @@ void MainWindow::on_actionOld_Person_Mode_triggered(bool checked)
 
     //Logic Analyzer Page
     ui->digitalOutputGroup->setFlat(true);
-    ui->busSifferGroup_CH1->setFlat(true);
+    ui->busSnifferGroup_CH1->setFlat(true);
     ui->busSnifferGroup_CH2->setFlat(true);
     ui->serialDecodingCheck_CH1->setFlat(true);
     ui->serialDecodingCheck_CH2->setFlat(true);
@@ -1592,10 +1592,10 @@ void MainWindow::on_actionOld_Person_Mode_triggered(bool checked)
         font_cursor_scaling.setBold(true);
         ui->cursorGroup->setFont(font_cursor_scaling);
 
-        QFont font_scope_pause = ui->pausedLabeL_CH1->font();
+        QFont font_scope_pause = ui->pausedLabel_CH1->font();
         font_scope_pause.setPointSize(16);
         font_scope_pause.setBold(true);
-        ui->pausedLabeL_CH1->setFont(font_scope_pause);
+        ui->pausedLabel_CH1->setFont(font_scope_pause);
 
         QFont font_sg1 = ui->signalGenGroup_CH1->font();
         font_sg1.setPointSize(16);
@@ -1644,7 +1644,7 @@ void MainWindow::on_actionOld_Person_Mode_triggered(bool checked)
         ui->stackedWidget->setMinimumHeight(480);
 
         //Grow Pause buttons
-        ui->pausedLabeL_CH1->setMaximumHeight(80);
+        ui->pausedLabel_CH1->setMaximumHeight(80);
         ui->pausedLabel_CH2->setMaximumHeight(80);
         ui->pause_LA->setMaximumHeight(80);
         ui->multimeterPauseCheckBox->setMaximumHeight(80);
@@ -1675,10 +1675,10 @@ void MainWindow::on_actionOld_Person_Mode_triggered(bool checked)
         font_cursor_scaling.setBold(true);
         ui->cursorGroup->setFont(font_cursor_scaling);
 
-        QFont font_scope_pause = ui->pausedLabeL_CH1->font();
+        QFont font_scope_pause = ui->pausedLabel_CH1->font();
         font_scope_pause.setPointSize(11);
         font_scope_pause.setBold(true);
-        ui->pausedLabeL_CH1->setFont(font_scope_pause);
+        ui->pausedLabel_CH1->setFont(font_scope_pause);
 
         QFont font_sg1 = ui->signalGenGroup_CH1->font();
         font_sg1.setPointSize(11);
@@ -1726,7 +1726,7 @@ void MainWindow::on_actionOld_Person_Mode_triggered(bool checked)
         ui->stackedWidget->setMinimumHeight(400);
 
         //Shrink Pause buttons
-        ui->pausedLabeL_CH1->setMaximumHeight(40);
+        ui->pausedLabel_CH1->setMaximumHeight(40);
         ui->pausedLabel_CH2->setMaximumHeight(40);
         ui->pause_LA->setMaximumHeight(40);
         ui->multimeterPauseCheckBox->setMaximumHeight(40);
@@ -1862,13 +1862,13 @@ void MainWindow::on_actionCalibrate_triggered()
         if(choice == QMessageBox::Ok){
             qDebug() << "Changing workspace...";
             ui->psuSlider->setValue(0);
-            ui->busSifferGroup_CH1->setChecked(false);
+            ui->busSnifferGroup_CH1->setChecked(false);
             ui->busSnifferGroup_CH2->setChecked(false);
             ui->multimeterGroup->setChecked(false);
             ui->triggerGroup->setChecked(false);
             ui->scopeGroup_CH1->setChecked(true);
             ui->scopeGroup_CH2->setChecked(true);
-            ui->pausedLabeL_CH1->setChecked(false);
+            ui->pausedLabel_CH1->setChecked(false);
             ui->pausedLabel_CH2->setChecked(false);
             ui->doubleSampleLabel->setChecked(false);
             ui->acCoupledLabel_CH1->setChecked(false);
@@ -2398,13 +2398,13 @@ void MainWindow::on_actionCalibrate_2_triggered()
     //Gain must be 1x
     qDebug() << "Changing workspace...";
     ui->psuSlider->setValue(0);
-    ui->busSifferGroup_CH1->setChecked(false);
+    ui->busSnifferGroup_CH1->setChecked(false);
     ui->busSnifferGroup_CH2->setChecked(false);
     ui->multimeterGroup->setChecked(false);
     ui->triggerGroup->setChecked(false);
     ui->scopeGroup_CH1->setChecked(true);
     ui->scopeGroup_CH2->setChecked(false);
-    ui->pausedLabeL_CH1->setChecked(false);
+    ui->pausedLabel_CH1->setChecked(false);
     ui->pausedLabel_CH2->setChecked(false);
     ui->doubleSampleLabel->setChecked(false);
     ui->acCoupledLabel_CH1->setChecked(false);
@@ -2614,7 +2614,7 @@ void MainWindow::on_actionHide_Widget_PowerSupply_triggered(bool checked)
 
 void MainWindow::on_actionHide_Widget_LogicAnalyzer_triggered(bool checked)
 {
-    ui->busSifferGroup_CH1->setVisible(!checked);
+    ui->busSnifferGroup_CH1->setVisible(!checked);
     ui->busSnifferGroup_CH2->setVisible(!checked);
     ui->digitalOutputGroup->setVisible(!checked);
 }
