@@ -2719,6 +2719,8 @@ void MainWindow::on_actionFrequency_Response_triggered(bool checked)
         ui->actionFrequency_Spectrum->setChecked(false);
         ui->doubleSampleLabel->setChecked(false);
         ui->multimeterGroup->setChecked(false);
+        ui->busSnifferGroup_CH1->setChecked(false);
+        ui->busSnifferGroup_CH2->setChecked(false);
         ui->scopeGroup_CH1->setChecked(true);
         ui->scopeGroup_CH2->setChecked(true);
     }
