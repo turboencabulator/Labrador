@@ -1,5 +1,8 @@
 #include "androidusbdriver.h"
-#include "QStandardPaths"
+#include <QFile>
+#include <QStandardPaths>
+#include <QThread>
+#include <QtAndroid>
 
 androidUsbDriver::androidUsbDriver(QWidget *parent) : unixUsbDriver(parent)
 {

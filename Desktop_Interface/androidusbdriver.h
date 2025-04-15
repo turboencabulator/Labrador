@@ -1,16 +1,10 @@
 #ifndef androidUsbDriver_H
 #define androidUsbDriver_H
 
-#include <QWidget>
-#include <QThread>
-#include <QMutex>
-#include <QDateTime>
-
 #include "unixusbdriver.h"
-#include "libusb.h"
 #include <QAndroidJniObject>
-#include <QtAndroid>
 
+class QWidget;
 
 class androidUsbDriver : public unixUsbDriver
 {
@@ -26,4 +20,4 @@ private:
     int get_new_bootloader_ctx(libusb_device **device_ptr, libusb_device_handle **handle, libusb_context **ctx);
 };
 
-#endif // unixUsbDriver_H
+#endif // androidUsbDriver_H
