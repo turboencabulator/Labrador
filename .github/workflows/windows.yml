@@ -79,12 +79,12 @@ jobs:
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Bootloader_Install.exe" -OutFile "driver/Bootloader_Install.exe"
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Driver_Install.exe" -OutFile "driver/Driver_Install.exe"
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Gobindar_Install.exe" -OutFile "driver/Gobindar_Install.exe"
-          mkdir "Prerequisites/Visual C++ Redistributable for Visual Studio 2017"
+          mkdir "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019"
           # XXX: Replacing these installers with the 2019 versions and hoping Advanced Installer handles them properly
-          #Invoke-WebRequest -Uri "http://download.visualstudio.microsoft.com/download/pr/9fbed7c7-7012-4cc0-a0a3-a541f51981b5/e7eec15278b4473e26d7e32cef53a34c/vc_redist.x64.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2017/vc_redist.x64.exe"
-          #Invoke-WebRequest -Uri "http://download.visualstudio.microsoft.com/download/pr/d0b808a8-aa78-4250-8e54-49b8c23f7328/9c5e6532055786367ee61aafb3313c95/vc_redist.x86.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2017/vc_redist.x86.exe"
-          mv "bin64/vc_redist.x64.exe" "Prerequisites/Visual C++ Redistributable for Visual Studio 2017"
-          mv "bin32/vc_redist.x86.exe" "Prerequisites/Visual C++ Redistributable for Visual Studio 2017"
+          #Invoke-WebRequest -Uri "http://download.visualstudio.microsoft.com/download/pr/9fbed7c7-7012-4cc0-a0a3-a541f51981b5/e7eec15278b4473e26d7e32cef53a34c/vc_redist.x64.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019/vc_redist.x64.exe"
+          #Invoke-WebRequest -Uri "http://download.visualstudio.microsoft.com/download/pr/d0b808a8-aa78-4250-8e54-49b8c23f7328/9c5e6532055786367ee61aafb3313c95/vc_redist.x86.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019/vc_redist.x86.exe"
+          mv "bin64/vc_redist.x64.exe" "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019"
+          mv "bin32/vc_redist.x86.exe" "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019"
 
       - name: Install Advanced Installer
         shell: cmd
