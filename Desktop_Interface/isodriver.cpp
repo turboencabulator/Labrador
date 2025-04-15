@@ -1020,30 +1020,34 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
     }
 
     if(snapshotEnabled_CH1){
-        snapshotFile_CH1->open(QIODevice::WriteOnly);
-        snapshotFile_CH1->write("t, v\n");
+        if (!spectrum && !freqResp) {
+            snapshotFile_CH1->open(QIODevice::WriteOnly);
+            snapshotFile_CH1->write("t, v\n");
 
-        char tempchar[32];
-        for(int i=0; i<GRAPH_SAMPLES; i++){
-            sprintf(tempchar, "%f, %f\n", x.at(i), CH1.at(i));
-            snapshotFile_CH1->write(tempchar);
+            char tempchar[32];
+            for(int i=0; i<GRAPH_SAMPLES; i++){
+                sprintf(tempchar, "%f, %f\n", x.at(i), CH1.at(i));
+                snapshotFile_CH1->write(tempchar);
+            }
+            snapshotFile_CH1->close();
         }
         snapshotEnabled_CH1 = false;
-        snapshotFile_CH1->close();
         delete(snapshotFile_CH1);
     }
 
     if(snapshotEnabled_CH2){
-        snapshotFile_CH2->open(QIODevice::WriteOnly);
-        snapshotFile_CH2->write("t, v\n");
+        if (!spectrum && !freqResp && CH2_mode) {
+            snapshotFile_CH2->open(QIODevice::WriteOnly);
+            snapshotFile_CH2->write("t, v\n");
 
-        char tempchar[32];
-        for(int i=0; i<GRAPH_SAMPLES; i++){
-            sprintf(tempchar, "%f, %f\n", x.at(i), CH2.at(i));
-            snapshotFile_CH2->write(tempchar);
+            char tempchar[32];
+            for(int i=0; i<GRAPH_SAMPLES; i++){
+                sprintf(tempchar, "%f, %f\n", x.at(i), CH2.at(i));
+                snapshotFile_CH2->write(tempchar);
+            }
+            snapshotFile_CH2->close();
         }
         snapshotEnabled_CH2 = false;
-        snapshotFile_CH2->close();
         delete(snapshotFile_CH2);
     }
 
