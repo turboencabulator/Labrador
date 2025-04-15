@@ -73,7 +73,7 @@ jobs:
       - name: Download additional files
         shell: pwsh
         run: |
-          Invoke-WebRequest -Uri "http://espotek.com/ai157.msi" -OutFile "ai157.msi"
+          Invoke-WebRequest -Uri "http://espotek.com/ai167.msi" -OutFile "ai167.msi"
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/Labrador.aip" -OutFile "Labrador.aip"
           mkdir "driver"
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Bootloader_Install.exe" -OutFile "driver/Bootloader_Install.exe"
@@ -89,8 +89,8 @@ jobs:
       - name: Install Advanced Installer
         shell: cmd
         run: |
-          msiexec /i ai157.msi /qn
-          rm ai157.msi
+          msiexec /i ai167.msi /qn
+          rm ai167.msi
 
       - name: Register Advanced Installer
         env:
@@ -98,12 +98,12 @@ jobs:
         if: env.AI_KEY != ''
         shell: cmd
         run: |
-          "C:/Program Files (x86)/Caphyon/Advanced Installer 15.7/bin/x86/AdvancedInstaller.com" /register %AI_KEY%
+          "C:/Program Files (x86)/Caphyon/Advanced Installer 16.7/bin/x86/AdvancedInstaller.com" /register %AI_KEY%
 
       - name: Build installer
         shell: cmd
         run: |
-          "C:/Program Files (x86)/Caphyon/Advanced Installer 15.7/bin/x86/AdvancedInstaller.com" /rebuild Labrador.aip
+          "C:/Program Files (x86)/Caphyon/Advanced Installer 16.7/bin/x86/AdvancedInstaller.com" /rebuild Labrador.aip
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
