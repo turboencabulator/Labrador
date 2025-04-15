@@ -4,7 +4,67 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-windows:
+    runs-on: windows-2019
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - QT_ARCH: 'win64_msvc2019_64'
+            PLATFORM: 'x64'
+            PLATFORM_ALT_NAME: 'amd64'
+            OUTPUT_BIN_DIR: 'bin64'
+          - QT_ARCH: 'win32_msvc2019'
+            PLATFORM: 'x86'
+            PLATFORM_ALT_NAME: 'x86'
+            OUTPUT_BIN_DIR: 'bin32'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install eigen
+        shell: cmd
+        run: |
+          choco install eigen
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          aqtversion: '==3.1.*'
+          version: '5.15.2'
+          host: 'windows'
+          target: 'desktop'
+          arch: '${{ matrix.QT_ARCH }}'
+
+      - name: Setup MSVC Developer Command Prompt
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.PLATFORM }}
+
+      - name: Build Labrador
+        working-directory: Desktop_Interface
+        shell: cmd
+        run: |
+          qmake CONFIG+=release INCLUDEPATH+="C:\ProgramData\chocolatey\lib\eigen\include\eigen3"
+          nmake
+
+      - name: Gather dependencies
+        working-directory: Desktop_Interface
+        shell: cmd
+        run: |
+          windeployqt bin\Labrador.exe
+          xcopy /i /s /y "build_win\fftw\${{ matrix.PLATFORM }}"\libfftw3-3.dll bin
+          xcopy /i /s /y "build_win\libusbk\bin\dll\${{ matrix.PLATFORM_ALT_NAME }}"\libusbK.dll bin
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.OUTPUT_BIN_DIR }}
+          path: Desktop_Interface/bin
+
   build-installer:
+    needs:
+      - build-windows
     runs-on: windows-2019
     steps:
       - name: Download artifacts
