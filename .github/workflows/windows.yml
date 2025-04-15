@@ -35,7 +35,6 @@ jobs:
           host: 'windows'
           target: 'desktop'
           arch: '${{ matrix.QT_ARCH }}'
-          modules: 'qtbase'
 
       - name: Setup MSVC Developer Command Prompt
         uses: ilammy/msvc-dev-cmd@v1
