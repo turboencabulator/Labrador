@@ -97,7 +97,8 @@ jobs:
       - name: Build installer
         shell: cmd
         run: |
-          "C:/Program Files (x86)/Caphyon/Advanced Installer 16.7/bin/x86/AdvancedInstaller.com" /rebuild Labrador.aip
+          PACKAGE_VERSION="1.0.${{ github.run_number }}"
+          "C:/Program Files (x86)/Caphyon/Advanced Installer 16.7/bin/x86/AdvancedInstaller.com" /SetVersion $PACKAGE_VERSION /rebuild Labrador.aip
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
