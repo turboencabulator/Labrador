@@ -283,6 +283,9 @@ android {
     LIBS += -L$$PWD/build_android/liblog/lib -llog
     ANDROID_EXTRA_LIBS += $${PWD}/build_android/liblog/lib/liblog.so
 
+    # Library dependencies are only compiled for this ABI currently
+    ANDROID_ABIS = armeabi-v7a
+
     # Doing the following inside one equals() failed. qmake bug?  https://forum.qt.io/topic/113836/dynamic-libs-on-android-with-qt5-14-2/4
     for(abi, ANDROID_ABIS): message("Building for Android ($${abi})")
     for(abi, ANDROID_ABIS): LIBS += -L$${PWD}/build_android/libusb-242/android/$${abi} -lusb1.0
