@@ -80,16 +80,8 @@ jobs:
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Driver_Install.exe" -OutFile "driver/Driver_Install.exe"
           Invoke-WebRequest -Uri "https://raw.githubusercontent.com/${{ github.repository }}/${{ github.ref }}/Desktop_Interface/build_win/driver/Gobindar_Install.exe" -OutFile "driver/Gobindar_Install.exe"
           mkdir "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019"
-<<<<<<< HEAD
-          # XXX: Replacing these installers with the 2019 versions and hoping Advanced Installer handles them properly
-          #Invoke-WebRequest -Uri "http://download.visualstudio.microsoft.com/download/pr/9fbed7c7-7012-4cc0-a0a3-a541f51981b5/e7eec15278b4473e26d7e32cef53a34c/vc_redist.x64.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019/vc_redist.x64.exe"
-          #Invoke-WebRequest -Uri "http://download.visualstudio.microsoft.com/download/pr/d0b808a8-aa78-4250-8e54-49b8c23f7328/9c5e6532055786367ee61aafb3313c95/vc_redist.x86.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019/vc_redist.x86.exe"
-          mv "bin64/vc_redist.x64.exe" "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019"
-          mv "bin32/vc_redist.x86.exe" "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019"
-=======
           Invoke-WebRequest -Uri "https://download.visualstudio.microsoft.com/download/pr/9307e627-aaac-42cb-a32a-a39e166ee8cb/E59AE3E886BD4571A811FE31A47959AE5C40D87C583F786816C60440252CD7EC/VC_redist.x86.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019/VC_redist.x86.exe"
           Invoke-WebRequest -Uri "https://download.visualstudio.microsoft.com/download/pr/3b070396-b7fb-4eee-aa8b-102a23c3e4f4/40EA2955391C9EAE3E35619C4C24B5AAF3D17AEAA6D09424EE9672AA9372AEED/VC_redist.x64.exe" -OutFile "Prerequisites/Visual C++ Redistributable for Visual Studio 2015-2019/VC_redist.x64.exe"
->>>>>>> 36cf4c2 (Download VC++ redistributables from MS servers)
 
       - name: Install Advanced Installer
         shell: cmd
