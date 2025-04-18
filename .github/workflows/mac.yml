@@ -2,9 +2,10 @@ name: Build macOS
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
-  build:
+  build-dmg:
     runs-on: macos-13
     steps:
       - name: Checkout repository
@@ -33,45 +34,7 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
+          name: asset-dmg
           path: Desktop_Interface/bin/Labrador.dmg
           compression-level: 0
           if-no-files-found: error
-
-  release:
-    permissions:
-      contents: write
-    needs:
-      - build
-    if: github.ref == 'refs/heads/master'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download artifacts
-        uses: actions/download-artifact@v4
-        with:
-          merge-multiple: true
-
-      - name: List artifacts
-        run: |
-          find . -type f
-
-      - name: Run uploadtool
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          UPLOADTOOL_ISPRERELEASE: 'true'
-          UPLOADTOOL_SUFFIX: 'macOS'
-          UPLOADTOOL_BODY: |-
-            EspoTek Labrador software for macOS 10.13 and later.
-            If you are running an older version of macOS, please use the macOS Legacy build below.
-
-            - Drag the Labrador app into `/Applications`
-            - Right-click and Open the Labrador app in your `/Applications` directory (you need to right-click and open, you can't just double-click)
-            - If you see a warning message, just press the `Open` button to continue
-            - That's it, you're done!  From now on you can open by simply double-clicking as you would any other app
-        run: |
-          UPLOADTOOL_BODY="$(echo "$UPLOADTOOL_BODY" | jq -Rsa '.')"
-          UPLOADTOOL_BODY="${UPLOADTOOL_BODY%\"}"
-          UPLOADTOOL_BODY="${UPLOADTOOL_BODY#\"}"
-
-          wget -N https://github.com/probonopd/uploadtool/raw/master/upload.sh
-          chmod +x ./upload.sh
-          find . -type f -not -path ./upload.sh -exec ./upload.sh {} +
