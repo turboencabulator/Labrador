@@ -10,13 +10,13 @@ It features well-written, rich articles as well as video content that explains e
 
 # Getting Started
 To download binary (executable) versions of the software, go to:  
-https://github.com/espotek-org/labrador/releases
+https://github.com/espotek-org/Labrador/releases
 
 For the documentation, please visit:  
-https://github.com/espotek-org/labrador/wiki 
+https://github.com/espotek-org/Labrador/wiki
 
 # Raspberry Pi Build
-***Please note that the 32-bit version of Raspbian version 9 (Stretch) or later is required to install this software.***
+***Please note that Raspbian version 9 (Stretch) or later is required to install this software.***
 
 To install Labrador on the Raspberry Pi, open a terminal and paste the following command:  
 `wget -O /tmp/labrador_bootstrap_pi https://raw.githubusercontent.com/espotek-org/Labrador/master/labrador_bootstrap_pi && sudo chmod +x /tmp/labrador_bootstrap_pi && sudo /tmp/labrador_bootstrap_pi`
