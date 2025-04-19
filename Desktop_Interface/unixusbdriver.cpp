@@ -6,8 +6,6 @@
 unixUsbDriver::unixUsbDriver(QWidget *parent) : genericUsbDriver(parent)
 {
     qDebug() << "unixUsbDriver created!";
-    tv.tv_sec = 0;
-    tv.tv_usec = 100000;
     for (unsigned char k=0; k<NUM_ISO_ENDPOINTS; k++){
         midBuffer_current[k] = (unsigned char*)calloc(ISO_PACKETS_PER_CTX * ISO_PACKET_SIZE, 1);
         midBuffer_prev[k] = (unsigned char*)calloc(ISO_PACKETS_PER_CTX * ISO_PACKET_SIZE, 1);

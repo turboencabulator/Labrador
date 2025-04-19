@@ -25,7 +25,6 @@ extern double SERIAL_DELAY;
 
 extern QMutex tcBlockMutex;
 extern QMutex unixDriverDeleteMutex;
-extern struct timeval tv;
 
 extern unsigned char expected_variant;
 
@@ -47,4 +46,3 @@ extern unsigned char expected_variant;
 #define NUM_BYTES_STORED_PER_DAQ_SAMPLE 9
 
 #endif // DESKTOP_SETTINGS_H
-

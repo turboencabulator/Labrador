@@ -40,6 +40,9 @@ public slots:
         while(cleanupRemaining){
             //qDebug() << cleanupRemaining;
             if(libusb_event_handling_ok(ctx)){
+                struct timeval tv;
+                tv.tv_sec = 0;
+                tv.tv_usec = 100000;
                 libusb_handle_events_timeout(ctx, &tv);
                 //qDebug() << "HANDLED";
             }
