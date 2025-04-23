@@ -1500,10 +1500,10 @@
            <string>Digital Output</string>
           </property>
           <layout class="QGridLayout" name="gridLayout_4">
-           <item row="1" column="0">
-            <widget class="QCheckBox" name="digitalOutCheckbox_CH3">
+           <item row="0" column="0">
+            <widget class="QCheckBox" name="digitalOutCheckbox_CH1">
              <property name="text">
-              <string>Pin 3</string>
+              <string>Pin 1</string>
              </property>
             </widget>
            </item>
@@ -1514,10 +1514,10 @@
              </property>
             </widget>
            </item>
-           <item row="0" column="0">
-            <widget class="QCheckBox" name="digitalOutCheckbox_CH1">
+           <item row="1" column="0">
+            <widget class="QCheckBox" name="digitalOutCheckbox_CH3">
              <property name="text">
-              <string>Pin 1</string>
+              <string>Pin 3</string>
              </property>
             </widget>
            </item>
@@ -1529,10 +1529,6 @@
             </widget>
            </item>
           </layout>
-          <zorder>digitalOutCheckbox_CH2</zorder>
-          <zorder>digitalOutCheckbox_CH1</zorder>
-          <zorder>digitalOutCheckbox_CH3</zorder>
-          <zorder>digitalOutCheckbox_CH4</zorder>
          </widget>
         </item>
         <item>
