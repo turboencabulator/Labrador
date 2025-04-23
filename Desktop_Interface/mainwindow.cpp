@@ -713,7 +713,7 @@ void MainWindow::connectDisplaySignals(){
     connect(ui->actionMin, SIGNAL(toggled(bool)), ui->voltageInfoMinLabel_CH1, SLOT(setVisible(bool)));
     connect(ui->actionMin, SIGNAL(toggled(bool)), ui->voltageInfoMinDisplay_CH1, SLOT(setVisible(bool)));
 
-    connect(ui->actionMean, SIGNAL(toggled(bool)), ui->VoltageInfoMeanLabel_CH1, SLOT(setVisible(bool)));
+    connect(ui->actionMean, SIGNAL(toggled(bool)), ui->voltageInfoMeanLabel_CH1, SLOT(setVisible(bool)));
     connect(ui->actionMean, SIGNAL(toggled(bool)), ui->voltageInfoMeanDisplay_CH1, SLOT(setVisible(bool)));
 
     connect(ui->actionRMS, SIGNAL(toggled(bool)), ui->voltageInfoRmsLabel_CH1, SLOT(setVisible(bool)));
@@ -723,7 +723,7 @@ void MainWindow::connectDisplaySignals(){
     ui->voltageInfoMaxDisplay_CH1->setVisible(0);
     ui->voltageInfoMinLabel_CH1->setVisible(0);
     ui->voltageInfoMinDisplay_CH1->setVisible(0);
-    ui->VoltageInfoMeanLabel_CH1->setVisible(0);
+    ui->voltageInfoMeanLabel_CH1->setVisible(0);
     ui->voltageInfoMeanDisplay_CH1->setVisible(0);
     ui->voltageInfoRmsLabel_CH1->setVisible(0);
     ui->voltageInfoRmsDisplay_CH1->setVisible(0);
@@ -734,7 +734,7 @@ void MainWindow::connectDisplaySignals(){
     connect(ui->actionMin_2, SIGNAL(toggled(bool)), ui->voltageInfoMinLabel_CH2, SLOT(setVisible(bool)));
     connect(ui->actionMin_2, SIGNAL(toggled(bool)), ui->voltageInfoMinDisplay_CH2, SLOT(setVisible(bool)));
 
-    connect(ui->actionMean_2, SIGNAL(toggled(bool)), ui->VoltageInfoMeanLabel_CH2, SLOT(setVisible(bool)));
+    connect(ui->actionMean_2, SIGNAL(toggled(bool)), ui->voltageInfoMeanLabel_CH2, SLOT(setVisible(bool)));
     connect(ui->actionMean_2, SIGNAL(toggled(bool)), ui->voltageInfoMeanDisplay_CH2, SLOT(setVisible(bool)));
 
     connect(ui->actionRMS_2, SIGNAL(toggled(bool)), ui->voltageInfoRmsLabel_CH2, SLOT(setVisible(bool)));
@@ -744,7 +744,7 @@ void MainWindow::connectDisplaySignals(){
     ui->voltageInfoMaxDisplay_CH2->setVisible(0);
     ui->voltageInfoMinLabel_CH2->setVisible(0);
     ui->voltageInfoMinDisplay_CH2->setVisible(0);
-    ui->VoltageInfoMeanLabel_CH2->setVisible(0);
+    ui->voltageInfoMeanLabel_CH2->setVisible(0);
     ui->voltageInfoMeanDisplay_CH2->setVisible(0);
     ui->voltageInfoRmsLabel_CH2->setVisible(0);
     ui->voltageInfoRmsDisplay_CH2->setVisible(0);
