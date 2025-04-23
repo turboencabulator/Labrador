@@ -1007,24 +1007,24 @@
           <layout class="QVBoxLayout" name="verticalLayout_19">
            <item>
             <layout class="QGridLayout" name="gridLayout_5">
-             <item row="1" column="0">
+             <item row="0" column="0">
               <widget class="QLabel" name="waveformLabel_CH1">
                <property name="text">
                 <string>Waveform</string>
                </property>
               </widget>
              </item>
-             <item row="1" column="1">
+             <item row="0" column="1">
               <widget class="espoComboBox" name="waveformSelect_CH1"/>
              </item>
-             <item row="2" column="0">
+             <item row="1" column="0">
               <widget class="QLabel" name="frequencyLabel_CH1">
                <property name="text">
                 <string>Frequency</string>
                </property>
               </widget>
              </item>
-             <item row="2" column="1">
+             <item row="1" column="1">
               <widget class="espoSpinBox" name="frequencyValue_CH1">
                <property name="suffix">
                 <string notr="true">Hz</string>
@@ -1046,14 +1046,14 @@
                </property>
               </widget>
              </item>
-             <item row="3" column="0">
+             <item row="2" column="0">
               <widget class="QLabel" name="amplitudeLabel_CH1">
                <property name="text">
                 <string>Amplitude</string>
                </property>
               </widget>
              </item>
-             <item row="3" column="1">
+             <item row="2" column="1">
               <widget class="espoSpinBox" name="amplitudeValue_CH1">
                <property name="suffix">
                 <string>V</string>
@@ -1066,14 +1066,14 @@
                </property>
               </widget>
              </item>
-             <item row="4" column="0">
+             <item row="3" column="0">
               <widget class="QLabel" name="dcOffsetLabel_CH1">
                <property name="text">
                 <string>Offset</string>
                </property>
               </widget>
              </item>
-             <item row="4" column="1">
+             <item row="3" column="1">
               <widget class="espoSpinBox" name="dcOffsetValue_CH1">
                <property name="suffix">
                 <string>V</string>
@@ -1086,14 +1086,14 @@
                </property>
               </widget>
              </item>
-             <item row="5" column="0">
+             <item row="4" column="0">
               <widget class="QLabel" name="dutyCycleLabel_CH1">
                <property name="text">
                 <string>Duty cycle</string>
                </property>
               </widget>
              </item>
-             <item row="5" column="1">
+             <item row="4" column="1">
               <widget class="espoSpinBox" name="dutyCycleValue_CH1">
                <property name="minimum">
                 <double>0.000000000000000</double>
@@ -1139,29 +1139,16 @@
             <layout class="QGridLayout" name="gridLayout_6">
              <item row="0" column="0">
               <widget class="QLabel" name="waveformLabel_CH2">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
                <property name="text">
                 <string>Waveform</string>
                </property>
               </widget>
              </item>
              <item row="0" column="1">
-              <widget class="espoComboBox" name="waveformSelect_CH2">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="editable">
-                <bool>false</bool>
-               </property>
-              </widget>
+              <widget class="espoComboBox" name="waveformSelect_CH2"/>
              </item>
              <item row="1" column="0">
               <widget class="QLabel" name="frequencyLabel_CH2">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
                <property name="text">
                 <string>Frequency</string>
                </property>
@@ -1169,14 +1156,14 @@
              </item>
              <item row="1" column="1">
               <widget class="espoSpinBox" name="frequencyValue_CH2">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
                <property name="suffix">
                 <string notr="true">Hz</string>
                </property>
                <property name="decimals">
                 <number>2</number>
+               </property>
+               <property name="minimum">
+                <double>0.000000000000000</double>
                </property>
                <property name="maximum">
                 <double>1000000.000000000000000</double>
@@ -1191,9 +1178,6 @@
              </item>
              <item row="2" column="0">
               <widget class="QLabel" name="amplitudeLabel_CH2">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
                <property name="text">
                 <string>Amplitude</string>
                </property>
@@ -1201,14 +1185,11 @@
              </item>
              <item row="2" column="1">
               <widget class="espoSpinBox" name="amplitudeValue_CH2">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
                <property name="suffix">
                 <string>V</string>
                </property>
                <property name="maximum">
-                <double>10.000000000000000</double>
+                <double>9.600000000000000</double>
                </property>
                <property name="singleStep">
                 <double>0.100000000000000</double>
@@ -1217,9 +1198,6 @@
              </item>
              <item row="3" column="0">
               <widget class="QLabel" name="dcOffsetLabel_CH2">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
                <property name="text">
                 <string>Offset</string>
                </property>
@@ -1227,14 +1205,11 @@
              </item>
              <item row="3" column="1">
               <widget class="espoSpinBox" name="dcOffsetValue_CH2">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
                <property name="suffix">
                 <string>V</string>
                </property>
                <property name="maximum">
-                <double>10.000000000000000</double>
+                <double>9.600000000000000</double>
                </property>
                <property name="singleStep">
                 <double>0.100000000000000</double>
