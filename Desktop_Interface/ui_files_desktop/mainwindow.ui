@@ -1367,51 +1367,16 @@
             </widget>
            </item>
            <item>
-            <widget class="QGroupBox" name="serialDecodingCheck_CH1">
-             <property name="title">
+            <widget class="QCheckBox" name="serialDecodingCheck_CH1">
+             <property name="text">
               <string>Serial Decoding</string>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_6">
-              <property name="spacing">
-               <number>0</number>
-              </property>
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>6</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-             </layout>
             </widget>
            </item>
            <item>
-            <widget class="QGroupBox" name="serialEncodingCheck_CH1">
-             <property name="title">
+            <widget class="QCheckBox" name="serialEncodingCheck_CH1">
+             <property name="text">
               <string>Serial Encoding</string>
-             </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
              </property>
             </widget>
            </item>
@@ -1434,36 +1399,10 @@
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_16">
            <item>
-            <widget class="QGroupBox" name="serialDecodingCheck_CH2">
-             <property name="title">
+            <widget class="QCheckBox" name="serialDecodingCheck_CH2">
+             <property name="text">
               <string>Serial Decoding</string>
              </property>
-             <property name="flat">
-              <bool>true</bool>
-             </property>
-             <property name="checkable">
-              <bool>true</bool>
-             </property>
-             <property name="checked">
-              <bool>false</bool>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_17">
-              <property name="spacing">
-               <number>0</number>
-              </property>
-              <property name="leftMargin">
-               <number>0</number>
-              </property>
-              <property name="topMargin">
-               <number>6</number>
-              </property>
-              <property name="rightMargin">
-               <number>0</number>
-              </property>
-              <property name="bottomMargin">
-               <number>0</number>
-              </property>
-             </layout>
             </widget>
            </item>
           </layout>
@@ -3814,64 +3753,24 @@
    <signal>toggled(bool)</signal>
    <receiver>controller_iso</receiver>
    <slot>setSerialDecodeEnabled_CH1(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1423</x>
-     <y>495</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>1251</x>
-     <y>892</y>
-    </hint>
-   </hints>
   </connection>
   <connection>
    <sender>serialDecodingCheck_CH2</sender>
    <signal>toggled(bool)</signal>
    <receiver>controller_iso</receiver>
    <slot>setSerialDecodeEnabled_CH2(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1423</x>
-     <y>583</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>1251</x>
-     <y>892</y>
-    </hint>
-   </hints>
   </connection>
   <connection>
    <sender>serialDecodingCheck_CH1</sender>
    <signal>toggled(bool)</signal>
    <receiver>console1</receiver>
    <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1423</x>
-     <y>495</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>401</x>
-     <y>726</y>
-    </hint>
-   </hints>
   </connection>
   <connection>
    <sender>serialDecodingCheck_CH2</sender>
    <signal>toggled(bool)</signal>
    <receiver>console2</receiver>
    <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1423</x>
-     <y>583</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>498</x>
-     <y>889</y>
-    </hint>
-   </hints>
   </connection>
   <connection>
    <sender>controller_iso</sender>
@@ -4566,64 +4465,30 @@
    <signal>toggled(bool)</signal>
    <receiver>txuart</receiver>
    <slot>setVisible(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1394</x>
-     <y>982</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>411</x>
-     <y>1122</y>
-    </hint>
-   </hints>
   </connection>
   <connection>
    <sender>serialEncodingCheck_CH1</sender>
    <signal>toggled(bool)</signal>
    <receiver>waveformSelect_CH1</receiver>
    <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1394</x>
-     <y>982</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>985</x>
-     <y>1039</y>
-    </hint>
-   </hints>
   </connection>
   <connection>
    <sender>serialEncodingCheck_CH1</sender>
    <signal>toggled(bool)</signal>
    <receiver>frequencyValue_CH1</receiver>
    <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1394</x>
-     <y>982</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>985</x>
-     <y>1068</y>
-    </hint>
-   </hints>
   </connection>
   <connection>
    <sender>serialEncodingCheck_CH1</sender>
    <signal>toggled(bool)</signal>
    <receiver>dcOffsetValue_CH1</receiver>
    <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1394</x>
-     <y>982</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>985</x>
-     <y>1126</y>
-    </hint>
-   </hints>
+  </connection>
+  <connection>
+   <sender>serialEncodingCheck_CH1</sender>
+   <signal>toggled(bool)</signal>
+   <receiver>dutyCycleValue_CH1</receiver>
+   <slot>setDisabled(bool)</slot>
   </connection>
   <connection>
    <sender>dutyCycleValue_CH1</sender>
@@ -4654,22 +4519,6 @@
     <hint type="destinationlabel">
      <x>411</x>
      <y>477</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>serialEncodingCheck_CH1</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>dutyCycleValue_CH1</receiver>
-   <slot>setDisabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1394</x>
-     <y>982</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>985</x>
-     <y>1136</y>
     </hint>
    </hints>
   </connection>
