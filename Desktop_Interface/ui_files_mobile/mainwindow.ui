@@ -264,15 +264,8 @@
                      </property>
                     </widget>
                    </item>
-                   <item row="3" column="0">
-                    <widget class="QLabel" name="voltageInfoRmsLabel_CH1">
-                     <property name="text">
-                      <string> RMS</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="1">
-                    <widget class="QLCDNumber" name="voltageInfoRmsDisplay_CH1">
+                   <item row="2" column="1">
+                    <widget class="QLCDNumber" name="voltageInfoMeanDisplay_CH1">
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
@@ -284,8 +277,15 @@
                      </property>
                     </widget>
                    </item>
-                   <item row="2" column="1">
-                    <widget class="QLCDNumber" name="voltageInfoMeanDisplay_CH1">
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="voltageInfoRmsLabel_CH1">
+                     <property name="text">
+                      <string> RMS</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="QLCDNumber" name="voltageInfoRmsDisplay_CH1">
                      <property name="minimumSize">
                       <size>
                        <width>0</width>
@@ -434,63 +434,10 @@
                    <property name="spacing">
                     <number>0</number>
                    </property>
-                   <item row="3" column="0">
-                    <widget class="QLabel" name="voltageInfoRmsLabel_CH2">
-                     <property name="text">
-                      <string> RMS</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="0">
-                    <widget class="QLabel" name="voltageInfoMinLabel_CH2">
-                     <property name="text">
-                      <string> Min</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="3" column="1">
-                    <widget class="QLCDNumber" name="voltageInfoRmsDisplay_CH2">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>24</height>
-                      </size>
-                     </property>
-                     <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="2" column="1">
-                    <widget class="QLCDNumber" name="voltageInfoMeanDisplay_CH2">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>24</height>
-                      </size>
-                     </property>
-                     <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
-                     </property>
-                    </widget>
-                   </item>
                    <item row="0" column="0">
                     <widget class="QLabel" name="voltageInfoMaxLabel_CH2">
                      <property name="text">
                       <string> Max</string>
-                     </property>
-                    </widget>
-                   </item>
-                   <item row="1" column="1">
-                    <widget class="QLCDNumber" name="voltageInfoMinDisplay_CH2">
-                     <property name="minimumSize">
-                      <size>
-                       <width>0</width>
-                       <height>24</height>
-                      </size>
-                     </property>
-                     <property name="frameShape">
-                      <enum>QFrame::NoFrame</enum>
                      </property>
                     </widget>
                    </item>
@@ -507,10 +454,63 @@
                      </property>
                     </widget>
                    </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="voltageInfoMinLabel_CH2">
+                     <property name="text">
+                      <string> Min</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QLCDNumber" name="voltageInfoMinDisplay_CH2">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>24</height>
+                      </size>
+                     </property>
+                     <property name="frameShape">
+                      <enum>QFrame::NoFrame</enum>
+                     </property>
+                    </widget>
+                   </item>
                    <item row="2" column="0">
                     <widget class="QLabel" name="VoltageInfoMeanLabel_CH2">
                      <property name="text">
                       <string> Mean</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QLCDNumber" name="voltageInfoMeanDisplay_CH2">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>24</height>
+                      </size>
+                     </property>
+                     <property name="frameShape">
+                      <enum>QFrame::NoFrame</enum>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="voltageInfoRmsLabel_CH2">
+                     <property name="text">
+                      <string> RMS</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="QLCDNumber" name="voltageInfoRmsDisplay_CH2">
+                     <property name="minimumSize">
+                      <size>
+                       <width>0</width>
+                       <height>24</height>
+                      </size>
+                     </property>
+                     <property name="frameShape">
+                      <enum>QFrame::NoFrame</enum>
                      </property>
                     </widget>
                    </item>
