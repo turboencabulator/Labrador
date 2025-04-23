@@ -905,168 +905,153 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
 
     udateCursors();
 
-    if(XYmode){
+    if (XYmode) {
         QCPCurve* curve = reinterpret_cast<QCPCurve*>(axes->plottable(0));
         curve->setData(CH1, CH2);
+        axes->xAxis->setLabel("CH1 (V)");
+        axes->yAxis->setLabel("CH2 (V)");
         axes->xAxis->setRange(xmin, xmax);
         axes->yAxis->setRange(ymin, ymax);
-    } else{
+
 #ifndef DISABLE_SPECTRUM
-        if (spectrum) { /*If frequency spectrum mode*/
-            /*Getting array of frequencies for display purposes*/
-            auto f = m_asyncDFT->getFrequencyWindow(internalBuffer_CH1->m_samplesPerSecond);
+    } else if (spectrum) {
+        /*Getting array of frequencies for display purposes*/
+        auto f = m_asyncDFT->getFrequencyWindow(internalBuffer_CH1->m_samplesPerSecond);
 
-            /*Creating DFT amplitudes*/
-            auto amplitude = m_asyncDFT->getPowerSpectrum_dBmV(CH1, m_windowFactorsSum);
-            axes->graph(0)->setData(f, amplitude);
-            if (CH2_mode) {
-                auto amplitude = m_asyncDFT->getPowerSpectrum_dBmV(CH2, m_windowFactorsSum);
-                axes->graph(1)->setData(f, amplitude);
-            }
-
-            axes->xAxis->setLabel("Frequency (Hz)");
-            axes->yAxis->setLabel("Relative Power (dBmV)");
-            axes->xAxis->setRange(m_spectrumMinX, m_spectrumMaxX);
-            /*Setting maximum/minimum y-axis -60dBmV to 90dBmV*/
-            axes->yAxis->setRange(90, -60);
-
-        } else if (freqResp){
-            if(!paused_CH1)
-            {
-                // Using least squares, fit a sinusoid to measured samples
-                int nof_elements = CH1.size();
-                double delta = 2 * PI / (nof_elements - 1);
-                double amp1, amp2, gain, gain_avg_db, phase1, phase2, phase_diff, phase_avg, norm_rms1, norm_rms2;
-                static double gain_sum = 0, phase_sum = 0;
-                static int freqResp_cnt = 0, err_cnt = 0;
-                Eigen::MatrixXf A(nof_elements, 3);
-                Eigen::VectorXf b1(nof_elements), b2(nof_elements), x1(3), x2(3), r1(nof_elements), r2(nof_elements);
-                for (int i = 0; i < nof_elements; i++)
-                {
-                    A(i, 0) = 1;
-                    A(i, 1) = std::sin(i*delta);
-                    A(i, 2) = std::cos(i*delta);
-                    b1(i) = CH1[i];
-                    b2(i) = CH2[i];
-                }
-
-                // Solve the least squares solution Ax=b (using QR decomposition)
-                x1 = A.colPivHouseholderQr().solve(b1);
-                x2 = A.colPivHouseholderQr().solve(b2);
-
-                // Calculate amplitude and phase
-                amp1 = hypot(x1(1), x1(2));
-                amp2 = hypot(x2(1), x2(2));
-                phase1 = atan2(-x1(2), x1(1)) * 180.0 / PI;
-                phase2 = atan2(-x2(2), x2(1)) * 180.0 / PI;
-
-                // Calculate normalized fitting risidual
-                r1 = A * x1 - b1;
-                r2 = A * x2 - b2;
-                norm_rms1 = sqrt((r1/amp1).cwiseAbs2().mean());
-                norm_rms2 = sqrt((r2/amp2).cwiseAbs2().mean());
-                // std::cout << "rms1 = " << norm_rms1 << " rms2 = " << norm_rms2 << "\n";
-
-                // If there is too much error in the least square fitting, discard current trace
-                if(norm_rms1 > 0.1 || norm_rms2 > 2)
-                {
-                    err_cnt++;
-                }
-                else
-                {
-                    // Calculate gain, and phase difference
-                    gain = amp2 / amp1;
-                    phase_diff = phase2 - phase1;
-                    phase_diff = phase_diff > 180 ? phase_diff - 360 : (phase_diff < -180 ? phase_diff + 360 : phase_diff);
-
-                    // Calculate average gain (dB) and average phase
-                    if(freqResp_cnt < 10)
-                    {
-                        gain_sum += gain;
-                        phase_sum += phase_diff;
-                    }
-                    else
-                    {
-                        gain_avg_db = 20 * log10(gain_sum/freqResp_cnt);
-                        phase_avg = phase_sum/freqResp_cnt;
-                        // std::cout << "gain_dB = " << gain_avg_db << " phase = " << phase_avg << "\n";
-
-                        // Search first occurrence
-                        int index = m_freqRespFreq.indexOf(freqValue_CH1->value());
-                        // Update if record exists
-                        if (index != -1)
-                        {
-                            m_freqRespGain[index] = gain_avg_db;
-                            m_freqRespPhase[index] = phase_avg;
-                        }
-                        // Append if record does not exist
-                        else
-                        {
-                            m_freqRespFreq.append(freqValue_CH1->value());
-                            m_freqRespGain.append(gain_avg_db);
-                            m_freqRespPhase.append(phase_avg);
-                        }
-                    }
-                    freqResp_cnt ++;
-                }
-
-                // Prepare for next cycle
-                if(freqResp_cnt > 10 || err_cnt > 10)
-                {
-                    // Reset frequency response vectors, when a user updates min/max/step parameters
-                    if(m_freqRespFlag)
-                    {
-                        m_freqRespFreq.clear();
-                        m_freqRespGain.clear();
-                        m_freqRespPhase.clear();
-                        m_freqRespFlag = false;
-                    }
-
-                    // Select new frequency
-                    double freqValue = freqValue_CH1->value() + m_freqRespStep;
-                    if(freqValue > m_freqRespMax || freqValue < m_freqRespMin || m_freqRespFreq.size() == 0)
-                        freqValue = m_freqRespMin;
-                    freqValue_CH1->setValue(freqValue);
-
-                    // Reset iterators
-                    gain_sum = 0;
-                    phase_sum = 0;
-                    freqResp_cnt = 0;
-                    err_cnt = 0;
-                }
-            }
-
-            // Plot gain response
-            axes->xAxis->setLabel("Frequency (Hz)");
-            if(m_freqRespType == 0)
-            {
-                axes->graph(0)->setData(m_freqRespFreq, m_freqRespGain);
-                axes->yAxis->setLabel("Gain (dB)");
-                axes->xAxis->setRange(m_freqRespMin-10, m_freqRespMax+10);
-                axes->yAxis->setRange(*std::min_element(m_freqRespGain.constBegin(), m_freqRespGain.constEnd())-10, *std::max_element(m_freqRespGain.constBegin(), m_freqRespGain.constEnd())+10);
-            }
-            // Plot phase response
-            else
-            {
-                axes->graph(0)->setData(m_freqRespFreq, m_freqRespPhase);
-                axes->yAxis->setLabel("Phase (degree)");
-                axes->xAxis->setRange(m_freqRespMin-10, m_freqRespMax+10);
-                axes->yAxis->setRange(*std::min_element(m_freqRespPhase.constBegin(), m_freqRespPhase.constEnd())-10, *std::max_element(m_freqRespPhase.constBegin(), m_freqRespPhase.constEnd())+10);
-            }
-            axes->graph(1)->clearData();
-        } else
-#endif
-        {
-            axes->graph(0)->setData(x,CH1);
-            if(CH2_mode) axes->graph(1)->setData(x,CH2);
-            axes->xAxis->setLabel("Time (sec)");
-            axes->yAxis->setLabel("Voltage (V)");
-            axes->xAxis->setRange(-display->window - display->delay, -display->delay);
-            axes->yAxis->setRange(display->topRange, display->botRange);
+        /*Creating DFT amplitudes*/
+        auto amplitude = m_asyncDFT->getPowerSpectrum_dBmV(CH1, m_windowFactorsSum);
+        axes->graph(0)->setData(f, amplitude);
+        if (CH2_mode) {
+            auto amplitude = m_asyncDFT->getPowerSpectrum_dBmV(CH2, m_windowFactorsSum);
+            axes->graph(1)->setData(f, amplitude);
         }
-        axes->xAxis->setLabelColor(Qt::white);
-        axes->yAxis->setLabelColor(Qt::white);
+
+        axes->xAxis->setLabel("Frequency (Hz)");
+        axes->yAxis->setLabel("Relative Power (dBmV)");
+        axes->xAxis->setRange(m_spectrumMinX, m_spectrumMaxX);
+        /*Setting maximum/minimum y-axis -60dBmV to 90dBmV*/
+        axes->yAxis->setRange(90, -60);
+
+    } else if (freqResp) {
+        if (!paused_CH1) {
+            // Using least squares, fit a sinusoid to measured samples
+            int nof_elements = CH1.size();
+            double delta = 2 * PI / (nof_elements - 1);
+            double amp1, amp2, gain, gain_avg_db, phase1, phase2, phase_diff, phase_avg, norm_rms1, norm_rms2;
+            static double gain_sum = 0, phase_sum = 0;
+            static int freqResp_cnt = 0, err_cnt = 0;
+            Eigen::MatrixXf A(nof_elements, 3);
+            Eigen::VectorXf b1(nof_elements), b2(nof_elements), x1(3), x2(3), r1(nof_elements), r2(nof_elements);
+            for (int i = 0; i < nof_elements; i++) {
+                A(i, 0) = 1;
+                A(i, 1) = std::sin(i*delta);
+                A(i, 2) = std::cos(i*delta);
+                b1(i) = CH1[i];
+                b2(i) = CH2[i];
+            }
+
+            // Solve the least squares solution Ax=b (using QR decomposition)
+            x1 = A.colPivHouseholderQr().solve(b1);
+            x2 = A.colPivHouseholderQr().solve(b2);
+
+            // Calculate amplitude and phase
+            amp1 = hypot(x1(1), x1(2));
+            amp2 = hypot(x2(1), x2(2));
+            phase1 = atan2(-x1(2), x1(1)) * 180.0 / PI;
+            phase2 = atan2(-x2(2), x2(1)) * 180.0 / PI;
+
+            // Calculate normalized fitting risidual
+            r1 = A * x1 - b1;
+            r2 = A * x2 - b2;
+            norm_rms1 = sqrt((r1/amp1).cwiseAbs2().mean());
+            norm_rms2 = sqrt((r2/amp2).cwiseAbs2().mean());
+            // std::cout << "rms1 = " << norm_rms1 << " rms2 = " << norm_rms2 << "\n";
+
+            // If there is too much error in the least square fitting, discard current trace
+            if (norm_rms1 > 0.1 || norm_rms2 > 2) {
+                err_cnt++;
+            } else {
+                // Calculate gain, and phase difference
+                gain = amp2 / amp1;
+                phase_diff = phase2 - phase1;
+                phase_diff = phase_diff > 180 ? phase_diff - 360 : (phase_diff < -180 ? phase_diff + 360 : phase_diff);
+
+                // Calculate average gain (dB) and average phase
+                if (freqResp_cnt < 10) {
+                    gain_sum += gain;
+                    phase_sum += phase_diff;
+                } else {
+                    gain_avg_db = 20 * log10(gain_sum/freqResp_cnt);
+                    phase_avg = phase_sum/freqResp_cnt;
+                    // std::cout << "gain_dB = " << gain_avg_db << " phase = " << phase_avg << "\n";
+
+                    // Search first occurrence
+                    int index = m_freqRespFreq.indexOf(freqValue_CH1->value());
+                    if (index != -1) {
+                        // Update if record exists
+                        m_freqRespGain[index] = gain_avg_db;
+                        m_freqRespPhase[index] = phase_avg;
+                    } else {
+                        // Append if record does not exist
+                        m_freqRespFreq.append(freqValue_CH1->value());
+                        m_freqRespGain.append(gain_avg_db);
+                        m_freqRespPhase.append(phase_avg);
+                    }
+                }
+                freqResp_cnt ++;
+            }
+
+            // Prepare for next cycle
+            if (freqResp_cnt > 10 || err_cnt > 10) {
+                // Reset frequency response vectors, when a user updates min/max/step parameters
+                if (m_freqRespFlag) {
+                    m_freqRespFreq.clear();
+                    m_freqRespGain.clear();
+                    m_freqRespPhase.clear();
+                    m_freqRespFlag = false;
+                }
+
+                // Select new frequency
+                double freqValue = freqValue_CH1->value() + m_freqRespStep;
+                if (freqValue > m_freqRespMax || freqValue < m_freqRespMin || m_freqRespFreq.size() == 0)
+                    freqValue = m_freqRespMin;
+                freqValue_CH1->setValue(freqValue);
+
+                // Reset iterators
+                gain_sum = 0;
+                phase_sum = 0;
+                freqResp_cnt = 0;
+                err_cnt = 0;
+            }
+        }
+
+        axes->xAxis->setLabel("Frequency (Hz)");
+        if (m_freqRespType == 0) {
+            // Plot gain response
+            axes->graph(0)->setData(m_freqRespFreq, m_freqRespGain);
+            axes->yAxis->setLabel("Gain (dB)");
+            axes->xAxis->setRange(m_freqRespMin-10, m_freqRespMax+10);
+            axes->yAxis->setRange(*std::min_element(m_freqRespGain.constBegin(), m_freqRespGain.constEnd())-10, *std::max_element(m_freqRespGain.constBegin(), m_freqRespGain.constEnd())+10);
+        } else {
+            // Plot phase response
+            axes->graph(0)->setData(m_freqRespFreq, m_freqRespPhase);
+            axes->yAxis->setLabel("Phase (degree)");
+            axes->xAxis->setRange(m_freqRespMin-10, m_freqRespMax+10);
+            axes->yAxis->setRange(*std::min_element(m_freqRespPhase.constBegin(), m_freqRespPhase.constEnd())-10, *std::max_element(m_freqRespPhase.constBegin(), m_freqRespPhase.constEnd())+10);
+        }
+        axes->graph(1)->clearData();
+#endif
+
+    } else {
+        axes->graph(0)->setData(x,CH1);
+        if (CH2_mode) axes->graph(1)->setData(x,CH2);
+        axes->xAxis->setLabel("Time (sec)");
+        axes->yAxis->setLabel("Voltage (V)");
+        axes->xAxis->setRange(-display->window - display->delay, -display->delay);
+        axes->yAxis->setRange(display->topRange, display->botRange);
     }
+    axes->xAxis->setLabelColor(Qt::white);
+    axes->yAxis->setLabelColor(Qt::white);
 
     if(snapshotEnabled_CH1){
 #ifndef DISABLE_SPECTRUM
