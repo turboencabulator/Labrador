@@ -270,6 +270,7 @@ android {
     INCLUDEPATH += $$PWD/build_android/libusb-242
 
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/build_android/package_source
+    ANDROID_MIN_SDK_VERSION = 21
     ANDROID_TARGET_SDK_VERSION = 28
     ANDROID_SDK_BUILD_TOOLS_REVISION = 28.0.3
 
