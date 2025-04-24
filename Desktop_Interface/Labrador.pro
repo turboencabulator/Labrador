@@ -269,10 +269,7 @@ android {
     HEADERS += androidusbdriver.h
     INCLUDEPATH += $$PWD/build_android/libusb-242
 
-    ANDROID_PACKAGE_SOURCE_DIR  = $$PWD/build_android/package_source
-    assets_deploy.files=$$files($$PWD/build_android/package_source/assets/*)
-    assets_deploy.path=/assets
-    INSTALLS += asssets_deploy
+    ANDROID_PACKAGE_SOURCE_DIR = $$PWD/build_android/package_source
 
     #libdfuprog include
     LIBS += -L$$PWD/build_android/libdfuprog/lib -ldfuprog-0.9
