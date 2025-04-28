@@ -2,16 +2,17 @@ name: Build Android
 
 on:
   workflow_dispatch:
+  workflow_call:
 
 jobs:
-  build:
+  build-apk:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v3
+        uses: jurplel/install-qt-action@v4
         with:
           aqtversion: '==3.1.*'
           version: '5.15.2'
@@ -22,19 +23,57 @@ jobs:
       - name: Install SDK
         run: ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install 'platforms;android-28' 'build-tools;28.0.3' 'ndk;21.3.6528147'
 
+      # Secrets should be the base64 portion of the PEM format
+      # (i.e. the stuff between the BEGIN/END lines):
+      #
+      # -----BEGIN CERTIFICATE-----
+      # ... base64-encoded X.509 certificate ...
+      # -----END CERTIFICATE-----
+      #
+      # -----BEGIN PRIVATE KEY-----
+      # ... base64-encoded PKCS#8 private key ...
+      # -----END PRIVATE KEY-----
+      #
+      # These can be extracted from a PKCS#12 .keystore file using:
+      # openssl pkcs12 -in path/to/.keystore -info -noenc
+
+      - name: Install certificate and private key
+        env:
+          ANDROID_CERTIFICATE_BASE64: ${{ secrets.ANDROID_CERTIFICATE_BASE64 }}
+          ANDROID_PRIVATE_KEY_BASE64: ${{ secrets.ANDROID_PRIVATE_KEY_BASE64 }}
+        if: env.ANDROID_PRIVATE_KEY_BASE64 != '' && env.ANDROID_CERTIFICATE_BASE64 != ''
+        working-directory: Desktop_Interface
+        run: |
+          echo "$ANDROID_CERTIFICATE_BASE64" | base64 --decode > cert.cer
+          echo "$ANDROID_PRIVATE_KEY_BASE64" | base64 --decode > cert.p8
+
+      # The .apk must be signed to be useful.  If the previous step
+      # was unsuccessful or skipped, build a debug package which will
+      # be signed with debug keys.
+
       - name: Build Android package
         working-directory: Desktop_Interface
         run: |
           export ANDROID_NDK_ROOT="${ANDROID_SDK_ROOT}/ndk/21.3.6528147"
-          qmake
-          make -j$(nproc)
-          make INSTALL_ROOT=labrador install
-          JAVA_HOME=${JAVA_HOME_11_X64} androiddeployqt --input android-Labrador-deployment-settings.json --output labrador --verbose --gradle --android-platform android-28
+          APK_BASENAME="EspoTek_Labrador-$(git rev-parse --short HEAD)"
+          if [ -e cert.cer ] && [ -e cert.p8 ]; then
+            qmake CONFIG+=release
+            make -j$(nproc)
+            make INSTALL_ROOT=android-build install
+            JAVA_HOME=${JAVA_HOME_11_X64} androiddeployqt --input android-Labrador-deployment-settings.json --output android-build --android-platform android-28 --verbose --gradle --apk ${APK_BASENAME}-release-unsigned.apk --release
+            ${ANDROID_SDK_ROOT}/build-tools/28.0.3/apksigner sign --in ${APK_BASENAME}-release-unsigned.apk --out ${APK_BASENAME}-release-signed.apk --key cert.p8 --cert cert.cer --verbose
+            rm ${APK_BASENAME}-release-unsigned.apk
+          else
+            qmake CONFIG+=debug
+            make -j$(nproc)
+            make INSTALL_ROOT=android-build install
+            JAVA_HOME=${JAVA_HOME_11_X64} androiddeployqt --input android-Labrador-deployment-settings.json --output android-build --android-platform android-28 --verbose --gradle --apk ${APK_BASENAME}-debug.apk
+          fi
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: apk
-          path: Desktop_Interface/labrador/build/outputs/apk/debug/labrador-debug.apk
+          name: asset-apk
+          path: Desktop_Interface/EspoTek_Labrador*.apk
           compression-level: 0
           if-no-files-found: error
