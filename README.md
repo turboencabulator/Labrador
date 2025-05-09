@@ -11,15 +11,6 @@ Binary (executable) versions of the software are available for [download](https:
 
 For the documentation, please visit the [wiki](https://github.com/espotek-org/Labrador/wiki).
 
-## Raspberry Pi Build
-***Please note that Raspbian version 9 (Stretch) or later is required to install this software.***
-
-To install Labrador on the Raspberry Pi, open a terminal and paste the following command:  
-`wget -O /tmp/labrador_bootstrap_pi https://raw.githubusercontent.com/espotek-org/Labrador/master/labrador_bootstrap_pi && sudo chmod +x /tmp/labrador_bootstrap_pi && sudo /tmp/labrador_bootstrap_pi`
-
-This will automatically download, compile and install the latest version of the Labrador software from source.  The whole process will take around 20-30 minutes, so don't forget to pack a snack!  
-After running it, a desktop entry will appear for the Labrador software (under Education), and running the `labrador` command from the terminal will launch the software interface.
-
 ## Building from Source
 If you're looking to build from source but don't know where to start, Qt Creator is the easiest way to get your toes wet!  
 https://www.qt.io/download-open-source/  
@@ -34,7 +25,7 @@ make
 sudo make install
 sudo ldconfig
 ```
-Then, to launch, just type `labrador` into the terminal.
+Then, to launch, just type `labrador` into the terminal.  Additional packages may be required, please see the full [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-from-source) on the wiki.
 
 On macOS, additional steps may be required.  See issue https://github.com/espotek-org/Labrador/issues/238
 
