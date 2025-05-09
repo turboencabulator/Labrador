@@ -4,6 +4,8 @@ on:
   workflow_dispatch:
 
 jobs:
+  build-android:
+    uses: ./.github/workflows/android.yml
   build-linux:
     uses: ./.github/workflows/linux.yml
   build-mac:
@@ -15,6 +17,7 @@ jobs:
     permissions:
       contents: write
     needs:
+      - build-android
       - build-linux
       - build-mac
       - build-windows
@@ -32,6 +35,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           UPLOADTOOL_ISPRERELEASE: 'true'
           UPLOADTOOL_BODY: |-
+            ## Android
+
+            Download `Labrador-<version>-release-signed.apk` for manual installation on Android 5.0 "Lollipop" or later (API Level 21).
+            If you are running an older version of Android, please use the Android Legacy build below.
+
             ## Linux (including Raspberry Pi)
 
             The Debian package is still a work in progess.  Please use one of the AppImages.
