@@ -6,12 +6,16 @@ on:
 jobs:
   build-android:
     uses: ./.github/workflows/android.yml
+    secrets: inherit
   build-linux:
     uses: ./.github/workflows/linux.yml
+    secrets: inherit
   build-mac:
     uses: ./.github/workflows/mac.yml
+    secrets: inherit
   build-windows:
     uses: ./.github/workflows/windows.yml
+    secrets: inherit
 
   release:
     permissions:
