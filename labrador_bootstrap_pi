@@ -29,12 +29,9 @@ cd /tmp
 rm -rf labrador
 git clone --depth 1 https://github.com/espotek-org/labrador
 
-# Set QT_SELECT so qtchooser picks the right version
-export QT_SELECT=qt5
-
 # Build labrador
 cd labrador/Desktop_Interface
-qmake
+QT_SELECT=qt5 qmake
 make
 sudo make install
 sudo ldconfig

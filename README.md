@@ -20,7 +20,7 @@ Once it's installed, open `Desktop_Interface/Labrador.pro`, then Clean All -> Ru
 
 If you're on Linux (including Raspberry Pi), then you can also build the software from source by cloning the repo, `cd`ing to the `Desktop_Interface` directory, then running:  
 ```
-qmake
+QT_SELECT=qt5 qmake
 make
 sudo make install
 sudo ldconfig
