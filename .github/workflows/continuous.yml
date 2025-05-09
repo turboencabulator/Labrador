@@ -46,8 +46,8 @@ jobs:
 
             The AppImages should be compatible with all modern 64-bit distros.  Download the `aarch64` AppImage for 64-bit ARM computers (e.g. Raspberry Pi), or the `x86_64` AppImage for 64-bit Intel/AMD computers.
 
-            - First make the AppImage file executable by running `chmod +x EspoTek_Labrador*.AppImage`
-            - Now you can run it just like any other program or script: `./EspoTek_Labrador*.AppImage`
+            - First make the AppImage file executable by running `chmod +x Labrador*.AppImage`
+            - Now you can run it just like any other program or script: `./Labrador*.AppImage`
 
             If you're running 32-bit, please see the [build instructions](https://github.com/espotek-org/Labrador/wiki/Building-from-source).
 
