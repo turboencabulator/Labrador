@@ -1,13 +1,8 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2018-02-23T14:16:15
-#
-#-------------------------------------------------
-
 QT += widgets
 QT -= gui
 
-TARGET = rador
+win32: TARGET = librador
+else:  TARGET = rador
 TEMPLATE = lib
 
 DEFINES += LIBRADOR_LIBRARY
