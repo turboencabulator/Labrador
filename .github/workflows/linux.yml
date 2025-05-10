@@ -26,19 +26,19 @@ jobs:
           sudo apt-get install -y build-essential libfftw3-dev qtbase5-dev libusb-1.0-0-dev libeigen3-dev wget
 
       - name: Build librador
-        working-directory: Librador_API/___librador/librador_shared_library
+        working-directory: Librador_API/___librador/librador
         run: |
           qmake -config release
           make -j$(nproc)
 
       - name: Build librademo
-        working-directory: Librador_API/___librador/demo_qt/librademo
+        working-directory: Librador_API/___librador/librademo
         run: |
           qmake -config release
           make -j$(nproc)
 
-      - name: Build BasicDemoLibradorWin
-        working-directory: Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin
+      - name: Build basicdemo
+        working-directory: Librador_API/___librador/basicdemo
         run: |
           qmake -config release
           make -j$(nproc)
@@ -69,19 +69,19 @@ jobs:
           sudo apt-get install -y build-essential libfftw3-dev qtbase5-dev libusb-1.0-0-dev libeigen3-dev
 
       - name: Build librador
-        working-directory: Librador_API/___librador/librador_shared_library
+        working-directory: Librador_API/___librador/librador
         run: |
           qmake -config release
           make -j$(nproc)
 
       - name: Build librademo
-        working-directory: Librador_API/___librador/demo_qt/librademo
+        working-directory: Librador_API/___librador/librademo
         run: |
           qmake -config release
           make -j$(nproc)
 
-      - name: Build BasicDemoLibradorWin
-        working-directory: Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin
+      - name: Build basicdemo
+        working-directory: Librador_API/___librador/basicdemo
         run: |
           qmake -config release
           make -j$(nproc)

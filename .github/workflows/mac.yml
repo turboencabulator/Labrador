@@ -19,19 +19,19 @@ jobs:
           brew link libomp qt@5 --force
 
       - name: Build librador
-        working-directory: Librador_API/___librador/librador_shared_library
+        working-directory: Librador_API/___librador/librador
         run: |
           qmake -config release
           make -j$(sysctl -n hw.ncpu)
 
       - name: Build librademo
-        working-directory: Librador_API/___librador/demo_qt/librademo
+        working-directory: Librador_API/___librador/librademo
         run: |
           qmake -config release
           make -j$(sysctl -n hw.ncpu)
 
-      - name: Build BasicDemoLibradorWin
-        working-directory: Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin
+      - name: Build basicdemo
+        working-directory: Librador_API/___librador/basicdemo
         run: |
           qmake -config release
           make -j$(sysctl -n hw.ncpu)

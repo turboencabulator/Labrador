@@ -1,6 +1,6 @@
-QT -= core gui
+QT += core gui widgets printsupport
 
-TARGET = BasicDemoLibradorWin
+TARGET = librademo
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
@@ -15,10 +15,20 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    BasicDemoLibradorWin.cpp
+    main.cpp \
+    mainwindow.cpp \
+    ../../../Desktop_Interface/ui_elements/qcp1/qcustomplot.cpp
+
+HEADERS += \
+    mainwindow.h \
+    ../../../Desktop_Interface/ui_elements/qcp1/qcustomplot.h
+
+FORMS += \
+    mainwindow.ui
 
 INCLUDEPATH += \
-    ../../../librador_shared_library
+    ../librador \
+    ../../../Desktop_Interface/ui_elements/qcp1
 
-win32: LIBS += -L$$PWD/../../../librador_shared_library/release -llibrador
-else:  LIBS += -L$$PWD/../../../librador_shared_library -lrador
+win32: LIBS += -L$$PWD/../librador/release -llibrador
+else:  LIBS += -L$$PWD/../librador -lrador

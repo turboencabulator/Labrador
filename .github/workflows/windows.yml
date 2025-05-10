@@ -42,21 +42,21 @@ jobs:
 
       - name: Build librador
         if: matrix.platform == 'x64'
-        working-directory: Librador_API/___librador/librador_shared_library
+        working-directory: Librador_API/___librador/librador
         run: |
           qmake -config release
           nmake
 
       - name: Build librademo
         if: matrix.platform == 'x64'
-        working-directory: Librador_API/___librador/demo_qt/librademo
+        working-directory: Librador_API/___librador/librademo
         run: |
           qmake -config release
           nmake
 
-      - name: Build BasicDemoLibradorWin
+      - name: Build basicdemo
         if: matrix.platform == 'x64'
-        working-directory: Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin
+        working-directory: Librador_API/___librador/basicdemo
         run: |
           qmake -config release
           nmake

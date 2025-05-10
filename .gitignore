@@ -36,12 +36,12 @@ pinout.png
 
 Librador_API/___librador/MATLAB_Octave/octave-workspace
 
-Librador_API/___librador/librador_shared_library/Makefile*
+Librador_API/___librador/librador/Makefile*
 
-Librador_API/___librador/demo_qt/librademo/Makefile*
-Librador_API/___librador/demo_qt/librademo/moc_*
-Librador_API/___librador/demo_qt/librademo/ui_*
-Librador_API/___librador/demo_qt/librademo/librademo
+Librador_API/___librador/librademo/Makefile*
+Librador_API/___librador/librademo/moc_*
+Librador_API/___librador/librademo/ui_*
+Librador_API/___librador/librademo/librademo
 
-Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin/Makefile*
-Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin/BasicDemoLibradorWin
+Librador_API/___librador/basicdemo/Makefile*
+Librador_API/___librador/basicdemo/basicdemo
