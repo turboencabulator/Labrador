@@ -221,7 +221,7 @@ macx {
     INCLUDEPATH += $$system(brew --prefix)/include
     INCLUDEPATH += $$system(brew --prefix)/include/eigen3
     INCLUDEPATH += $$system(brew --prefix)/include/libusb-1.0
-    LIBS += -L$$system(brew --prefix)/lib
+    LIBS += -L$$system(brew --prefix)/lib -lusb-1.0
 
     QMAKE_LFLAGS += "-undefined dynamic_lookup"
 }
