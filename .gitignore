@@ -1,15 +1,19 @@
 *.csv
 /.project
 *.obj
-/Desktop_Interface/android-build
+*.lib
+*.dll
 *.exe
+*.pdb
 *.properties~
 *.properties
+Desktop_Interface/android-build
 Desktop_Interface/moc
 Desktop_Interface/qrc
 Desktop_Interface/ui
 Desktop_Interface/Makefile*
 *.user*
+Desktop_Interface/labrador
 Desktop_Interface/Labrador_resource.rc
 Desktop_Interface/android-Labrador-deployment-settings.json
 Desktop_Interface/app_process
@@ -20,27 +24,21 @@ Desktop_Interface/debug
 Desktop_Interface/release
 !Desktop_Interface/resources/firmware/dfu-programmer.exe
 *.o
-Desktop_Interface/labrador
-*.deb
-*.tar.gz
 *.so
 *.so.*
-*.qmake.stash
+*.deb
+*.tar.gz
+.qmake.stash
+.vs
 Thumbs.db
 pinout.png
-Matlab_Octave_API/___librador/build-librador-Desktop_Qt_5_10_0_GCC_64bit-Release
-Matlab_Octave_API/___librador/build-librador-Desktop_Qt_5_10_0_GCC_64bit-Debug
-
-Matlab_Octave_API/___librador/demo/librademo/Makefile
-
-Matlab_Octave_API/___librador/demo/librademo/librademo
-
 *.mex
 
 Librador_API/___librador/MATLAB_Octave/octave-workspace
 
-Librador_API/___librador/librador_shared_library/Makefile
+Librador_API/___librador/librador_shared_library/Makefile*
 
+Librador_API/___librador/demo_qt/librademo/Makefile*
+Librador_API/___librador/demo_qt/librademo/moc_*
+Librador_API/___librador/demo_qt/librademo/ui_*
 Librador_API/___librador/demo_qt/librademo/librademo
-
-Librador_API/___librador/librador_shared_library/a\.out
