@@ -4,9 +4,8 @@
 #
 #-------------------------------------------------
 
-QT       += widgets
-
-QT       -= gui
+QT += widgets
+QT -= gui
 
 TARGET = rador
 TEMPLATE = lib
@@ -24,20 +23,18 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-#Include Labrador Sources
-INCLUDEPATH += ../../../Desktop_Interface
-DEPENDPATH += ../../../Desktop_Interface
-
 SOURCES += \
-        librador.cpp \
-        o1buffer.cpp \
+    librador.cpp \
+    o1buffer.cpp \
     usbcallhandler.cpp
 
 HEADERS += \
-        librador.h \
-        librador_global.h \ 
-        librador_internal.h \
-        o1buffer.h \
+    librador.h \
+    librador_global.h \
+    librador_internal.h \
+    logging.h \
+    logging_internal.h \
+    o1buffer.h \
     usbcallhandler.h
 
 unix {
@@ -46,33 +43,17 @@ unix {
 }
 
 unix:!android:!macx {
+    DEFINES += PLATFORM_LINUX
+
     #libusb include
-    LIBS += -L../../../Desktop_Interface/build_linux/libusb -lusb-1.0  ##I suspect the -L here does nothing!
-    INCLUDEPATH += ../../../Desktop_Interface/build_linux/libusb
-    DEPENDPATH += ../../../Desktop_Interface/build_linux/libusb
-
-    #libdfuprog include
-    LIBS += -L../../../Desktop_Interface/build_linux/libdfuprog/lib/x64 -ldfuprog-0.9
-    INCLUDEPATH += ../../../Desktop_Interface/build_linux/libdfuprog/include
-    DEPENDPATH += ../../../Desktop_Interface/build_linux/libdfuprog/include
-
-    #linux defines
-    DEFINES += \
-        PLATFORM_LINUX \
+    CONFIG += link_pkgconfig
+    PKGCONFIG += libusb-1.0
 }
 
 macx {
+    DEFINES += PLATFORM_MAC
+
     #libusb include
-    LIBS += -L../../../Desktop_Interface/build_mac/libusb/lib -lusb-1.0  ##I suspect the -L here does nothing!
-    INCLUDEPATH += ../../../Desktop_Interface/build_mac/libusb/include/libusb-1.0
-    DEPENDPATH += ../../../Desktop_Interface/build_mac/libusb/include/libusb-1.0
-
-    #libdfuprog include
-    LIBS += -L../../../Desktop_Interface/build_mac/libdfuprog/lib -ldfuprog-0.9
-    INCLUDEPATH += ../../../Desktop_Interface/build_mac/libdfuprog/include
-    DEPENDPATH += ../../../Desktop_Interface/build_mac/libdfuprog/include
-
-    #linux defines
-    DEFINES += \
-        PLATFORM_MAC \
+    INCLUDEPATH += $$system(brew --prefix)/include/libusb-1.0
+    LIBS += -L$$system(brew --prefix)/lib -lusb-1.0
 }
