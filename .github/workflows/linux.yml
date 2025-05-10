@@ -25,6 +25,24 @@ jobs:
           sudo apt-get install -y software-properties-common
           sudo apt-get install -y build-essential libfftw3-dev qtbase5-dev libusb-1.0-0-dev libeigen3-dev wget
 
+      - name: Build librador
+        working-directory: Librador_API/___librador/librador_shared_library
+        run: |
+          qmake -config release
+          make -j$(nproc)
+
+      - name: Build librademo
+        working-directory: Librador_API/___librador/demo_qt/librademo
+        run: |
+          qmake -config release
+          make -j$(nproc)
+
+      - name: Build BasicDemoLibradorWin
+        working-directory: Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin
+        run: |
+          qmake -config release
+          make -j$(nproc)
+
       - name: Build AppImage
         working-directory: Desktop_Interface
         run: |
@@ -49,6 +67,24 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y software-properties-common
           sudo apt-get install -y build-essential libfftw3-dev qtbase5-dev libusb-1.0-0-dev libeigen3-dev
+
+      - name: Build librador
+        working-directory: Librador_API/___librador/librador_shared_library
+        run: |
+          qmake -config release
+          make -j$(nproc)
+
+      - name: Build librademo
+        working-directory: Librador_API/___librador/demo_qt/librademo
+        run: |
+          qmake -config release
+          make -j$(nproc)
+
+      - name: Build BasicDemoLibradorWin
+        working-directory: Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin
+        run: |
+          qmake -config release
+          make -j$(nproc)
 
       - name: Build Debian package
         working-directory: Desktop_Interface

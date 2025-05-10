@@ -40,6 +40,27 @@ jobs:
         with:
           arch: ${{ matrix.platform }}
 
+      - name: Build librador
+        if: matrix.platform == 'x64'
+        working-directory: Librador_API/___librador/librador_shared_library
+        run: |
+          qmake -config release
+          nmake
+
+      - name: Build librademo
+        if: matrix.platform == 'x64'
+        working-directory: Librador_API/___librador/demo_qt/librademo
+        run: |
+          qmake -config release
+          nmake
+
+      - name: Build BasicDemoLibradorWin
+        if: matrix.platform == 'x64'
+        working-directory: Librador_API/___librador/win_demo/BasicDemoLibradorWin/BasicDemoLibradorWin
+        run: |
+          qmake -config release
+          nmake
+
       - name: Build Labrador
         working-directory: Desktop_Interface
         shell: cmd
