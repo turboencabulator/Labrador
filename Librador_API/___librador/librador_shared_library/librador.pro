@@ -52,3 +52,11 @@ macx {
     INCLUDEPATH += $$system(brew --prefix)/include/libusb-1.0
     LIBS += -L$$system(brew --prefix)/lib -lusb-1.0
 }
+
+win32 {
+    DEFINES += PLATFORM_WINDOWS
+
+    #libusb include
+    INCLUDEPATH += ../libusb
+    LIBS += -L$$PWD/../libusb -llibusb-1.0
+}
