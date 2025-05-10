@@ -1,5 +1,5 @@
 #include "usbcallhandler.h"
-#include <stdio.h>
+//#include <stdio.h>
 
 #include "o1buffer.h"
 #include "logging_internal.h"
@@ -151,13 +151,13 @@ usbCallHandler::~usbCallHandler(){
     }
     LIBRADOR_LOG(LOG_DEBUG, "Transfers freed.\n");
 
-    if(handle != NULL){
+    if(handle){
     libusb_release_interface(handle, 0);
         LIBRADOR_LOG(LOG_DEBUG, "Interface released\n");
         libusb_close(handle);
         LIBRADOR_LOG(LOG_DEBUG, "Device Closed\n");
     }
-    if(ctx != NULL){
+    if(ctx){
         libusb_exit(ctx);
         LIBRADOR_LOG(LOG_DEBUG, "Libusb exited\n");
     }
@@ -169,7 +169,7 @@ usbCallHandler::~usbCallHandler(){
 int usbCallHandler::setup_usb_control(){
     LIBRADOR_LOG(LOG_DEBUG, "usbCallHandler::setup_usb_control()\n");
 
-    if(ctx != NULL){
+    if(ctx){
         LIBRADOR_LOG(LOG_ERROR, "There is already a libusb context!\n");
         return 1;
     } else LIBRADOR_LOG(LOG_WARNING, "libusb context is null\n");
@@ -185,10 +185,10 @@ int usbCallHandler::setup_usb_control(){
 
     //Get a handle on the Labrador device
     handle = libusb_open_device_with_vid_pid(ctx, VID, PID);
-    if(handle==NULL){
+    if(!handle){
         LIBRADOR_LOG(LOG_ERROR, "DEVICE NOT FOUND\n");
         libusb_exit(ctx);
-        ctx = NULL;
+        ctx = nullptr;
         return -2;
     }
     LIBRADOR_LOG(LOG_DEBUG, "Device found!!\n");
@@ -198,7 +198,7 @@ int usbCallHandler::setup_usb_control(){
     if(error){
         LIBRADOR_LOG(LOG_ERROR, "libusb_claim_interface FAILED\n");
         libusb_close(handle);
-        handle = NULL;
+        handle = nullptr;
         return -3;
     } else LIBRADOR_LOG(LOG_DEBUG, "Interface claimed!\n");
 /*
@@ -206,7 +206,7 @@ int usbCallHandler::setup_usb_control(){
     if(error){
         printf("libusb_set_interface_alt_setting FAILED\n");
         libusb_close(handle);
-        handle = NULL;
+        handle = nullptr;
         return -4;
     } else printf("bAlternateSetting claimed!\n");
 */
@@ -225,7 +225,7 @@ int usbCallHandler::setup_usb_iso(){
     for(int n=0;n<NUM_FUTURE_CTX;n++){
         for (unsigned char k=0;k<NUM_ISO_ENDPOINTS;k++){
             isoCtx[k][n] = libusb_alloc_transfer(ISO_PACKETS_PER_CTX);
-            libusb_fill_iso_transfer(isoCtx[k][n], handle, pipeID[k], dataBuffer[k][n], ISO_PACKET_SIZE*ISO_PACKETS_PER_CTX, ISO_PACKETS_PER_CTX, isoCallback, NULL, 4000);
+            libusb_fill_iso_transfer(isoCtx[k][n], handle, pipeID[k], dataBuffer[k][n], ISO_PACKET_SIZE*ISO_PACKETS_PER_CTX, ISO_PACKETS_PER_CTX, isoCallback, nullptr, 4000);
             libusb_set_iso_packet_lengths(isoCtx[k][n], ISO_PACKET_SIZE);
             error = libusb_submit_transfer(isoCtx[k][n]);
             if(error){
@@ -247,7 +247,7 @@ int usbCallHandler::send_control_transfer(uint8_t RequestType, uint8_t Request, 
         return -1;
     }
 
-    if (LDATA==NULL){
+    if (!LDATA){
         controlBuffer = inBuffer;
     }
     else controlBuffer = LDATA;
@@ -269,7 +269,7 @@ int usbCallHandler::send_control_transfer(uint8_t RequestType, uint8_t Request, 
 
 
 int usbCallHandler::avrDebug(void){
-    send_control_transfer_with_error_checks(0xc0, 0xa0, 0, 0, sizeof(unified_debug), NULL);
+    send_control_transfer_with_error_checks(0xc0, 0xa0, 0, 0, sizeof(unified_debug), nullptr);
 
     LIBRADOR_LOG(LOG_DEBUG, "unified debug is of size %lu\n", sizeof(unified_debug));
 
@@ -299,7 +299,7 @@ int usbCallHandler::avrDebug(void){
 }
 
 std::vector<double>* usbCallHandler::getMany_double(int channel, int numToGet, int interval_samples, int delay_sample, int filter_mode){
-std::vector<double>* temp_to_return = NULL;
+std::vector<double>* temp_to_return = nullptr;
 
 buffer_read_write_mutex.lock();
     switch(deviceMode){
@@ -325,7 +325,7 @@ buffer_read_write_mutex.lock();
 }
 
 std::vector<uint8_t> * usbCallHandler::getMany_singleBit(int channel, int numToGet, int interval_subsamples, int delay_subsamples){
-    std::vector<uint8_t>* temp_to_return = NULL;
+    std::vector<uint8_t>* temp_to_return = nullptr;
 
     buffer_read_write_mutex.lock();
         switch(deviceMode){
@@ -346,7 +346,7 @@ std::vector<uint8_t> * usbCallHandler::getMany_singleBit(int channel, int numToG
 
 
 std::vector<double> *usbCallHandler::getMany_sincelast(int channel, int feasible_window_begin, int feasible_window_end, int interval_samples, int filter_mode){
-    std::vector<double>* temp_to_return = NULL;
+    std::vector<double>* temp_to_return = nullptr;
     buffer_read_write_mutex.lock();
         switch(deviceMode){
         case 0:
@@ -382,7 +382,7 @@ int usbCallHandler::set_device_mode(int mode){
         return -1;
     }
     deviceMode = mode;
-    send_control_transfer_with_error_checks(0x40, 0xa5, (mode == 5 ? 0 : mode), gainMask, 0, NULL);
+    send_control_transfer_with_error_checks(0x40, 0xa5, (mode == 5 ? 0 : mode), gainMask, 0, nullptr);
 
     send_function_gen_settings(1);
     send_function_gen_settings(2);
@@ -411,7 +411,7 @@ int usbCallHandler::set_gain(double newGain){
 
     gainMask = gainMask << 2;
     gainMask |= (gainMask << 8);
-    send_control_transfer_with_error_checks(0x40, 0xa5, deviceMode, gainMask, 0, NULL);
+    send_control_transfer_with_error_checks(0x40, 0xa5, deviceMode, gainMask, 0, nullptr);
     current_scope_gain = newGain;
     return 0;
 }
@@ -501,7 +501,7 @@ int usbCallHandler::send_function_gen_settings(int channel){
     } else {
         return -2; //Invalid channel
     }
-    send_control_transfer_with_error_checks(0x40, 0xa4, fGenTriple, 0, 0, NULL);
+    send_control_transfer_with_error_checks(0x40, 0xa4, fGenTriple, 0, 0, nullptr);
     return 0;
 }
 
@@ -515,27 +515,27 @@ int usbCallHandler::set_psu_voltage(double voltage){
     if ((dutyPsu>106) || (dutyPsu<21)){
         return -1;  //Out of range
     }
-    send_control_transfer_with_error_checks(0x40, 0xa3, dutyPsu, 0, 0, NULL);
+    send_control_transfer_with_error_checks(0x40, 0xa3, dutyPsu, 0, 0, nullptr);
     return 0;
 }
 
 int usbCallHandler::set_digital_state(uint8_t digState){
-    send_control_transfer_with_error_checks(0x40, 0xa6, digState, 0, 0, NULL);
+    send_control_transfer_with_error_checks(0x40, 0xa6, digState, 0, 0, nullptr);
     return 0;
 }
 
 int usbCallHandler::reset_device(bool goToBootloader){
-    send_control_transfer_with_error_checks(0x40, 0xa7, (goToBootloader ? 1 : 0), 0, 0, NULL);
+    send_control_transfer_with_error_checks(0x40, 0xa7, (goToBootloader ? 1 : 0), 0, 0, nullptr);
     return 0;
 }
 
 uint16_t usbCallHandler::get_firmware_version(){
-    send_control_transfer_with_error_checks(0xc0, 0xa8, 0, 0, 2, NULL);
+    send_control_transfer_with_error_checks(0xc0, 0xa8, 0, 0, 2, nullptr);
     return *((uint16_t *) inBuffer);
 }
 
 uint8_t usbCallHandler::get_firmware_variant(){
-    send_control_transfer_with_error_checks(0xc0, 0xa9, 0, 0, 1, NULL);
+    send_control_transfer_with_error_checks(0xc0, 0xa9, 0, 0, 1, nullptr);
     return *((uint8_t *) inBuffer);
 }
 

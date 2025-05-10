@@ -16,13 +16,13 @@ Librador::Librador()
 }
 
 int librador_init(){
-    if(internal_librador_object != NULL){
+    if(internal_librador_object){
         //Object already initialised
         return 1;
     }
 
     internal_librador_object = new Librador();
-    if(internal_librador_object == NULL){
+    if(!internal_librador_object){
         //Object initialisation failed
         return -1;
     } else {
@@ -33,13 +33,13 @@ int librador_init(){
 
 int librador_exit(){
     CHECK_API_INITIALISED
-    if(internal_librador_object == NULL){
+    if(!internal_librador_object){
         //Object not yet initialised
         return 1;
     }
 
     delete internal_librador_object;
-    internal_librador_object = NULL;
+    internal_librador_object = nullptr;
     //Object deleted
     return 0;
 }
@@ -73,7 +73,7 @@ std::vector<double> * librador_get_analog_data(int channel, double timeWindow_se
     double samples_per_second = internal_librador_object->usb_driver->get_samples_per_second();
 
     if(samples_per_second == 0){
-        return NULL;
+        return nullptr;
     }
 
 
@@ -91,7 +91,7 @@ std::vector<uint8_t> * librador_get_digital_data(int channel, double timeWindow_
     double subsamples_per_second = internal_librador_object->usb_driver->get_samples_per_second() * 8;
 
     if(subsamples_per_second == 0){
-        return NULL;
+        return nullptr;
     }
 
 
@@ -113,7 +113,7 @@ std::vector<double> * librador_get_analog_data_sincelast(int channel, double tim
     double samples_per_second = internal_librador_object->usb_driver->get_samples_per_second();
 
     if(samples_per_second == 0){
-        return NULL;
+        return nullptr;
     }
 
     int interval_samples = round(samples_per_second / sample_rate_hz);
@@ -303,7 +303,7 @@ int librador_synchronise_end(){
 
 static void std_logger(void * userdata, const int level, const char * format, va_list ap);
 static librador_logger_p _librador_global_logger = std_logger;
-static void * _librador_global_userdata = NULL;
+static void * _librador_global_userdata = nullptr;
 
 void librador_global_logger(const int level, const char * format, ...){
 	va_list args;

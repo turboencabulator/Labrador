@@ -81,8 +81,8 @@ public:
     int set_synchronous_pause_state(bool newState);
 private:
     unsigned short VID, PID;
-    libusb_context *ctx = NULL;
-    libusb_device_handle *handle = NULL;
+    libusb_context *ctx = nullptr;
+    libusb_device_handle *handle = nullptr;
     unsigned char inBuffer[256];
 
     //USBIso Vars
