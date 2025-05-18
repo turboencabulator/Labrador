@@ -15,10 +15,10 @@ jobs:
         uses: jurplel/install-qt-action@v4
         with:
           aqtversion: '==3.1.*'
-          version: '5.15.2'
+          version: '5.12.12'
           host: 'linux'
           target: 'android'
-          arch: 'android'
+          arch: 'android_armv7'
 
       - name: Install SDK
         run: ${ANDROID_SDK_ROOT}/cmdline-tools/latest/bin/sdkmanager --install 'platforms;android-28' 'build-tools;28.0.3' 'ndk;21.3.6528147'
@@ -60,14 +60,14 @@ jobs:
             qmake -config release
             make -j$(nproc)
             make INSTALL_ROOT=android-build install
-            JAVA_HOME=${JAVA_HOME_11_X64} androiddeployqt --input android-Labrador-deployment-settings.json --output android-build --android-platform android-28 --verbose --gradle --apk ${APK_BASENAME}-release-unsigned.apk --release
-            ${ANDROID_SDK_ROOT}/build-tools/28.0.3/apksigner sign --in ${APK_BASENAME}-release-unsigned.apk --out ${APK_BASENAME}-release-signed.apk --key cert.p8 --cert cert.cer --verbose
-            rm ${APK_BASENAME}-release-unsigned.apk
+            JAVA_HOME=${JAVA_HOME_8_X64} androiddeployqt --input android-libLabrador.so-deployment-settings.json --output android-build --android-platform android-28 --verbose --gradle --release
+            ${ANDROID_SDK_ROOT}/build-tools/28.0.3/apksigner sign --in android-build/build/outputs/apk/release/android-build-release-unsigned.apk --out ${APK_BASENAME}-release-signed.apk --key cert.p8 --cert cert.cer --verbose
           else
             qmake -config debug
             make -j$(nproc)
             make INSTALL_ROOT=android-build install
-            JAVA_HOME=${JAVA_HOME_11_X64} androiddeployqt --input android-Labrador-deployment-settings.json --output android-build --android-platform android-28 --verbose --gradle --apk ${APK_BASENAME}-debug.apk
+            JAVA_HOME=${JAVA_HOME_8_X64} androiddeployqt --input android-libLabrador.so-deployment-settings.json --output android-build --android-platform android-28 --verbose --gradle
+            cp android-build/build/outputs/apk/debug/android-build-debug.apk ${APK_BASENAME}-debug.apk
           fi
 
       - name: Upload artifacts

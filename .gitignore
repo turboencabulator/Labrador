@@ -15,6 +15,7 @@ Desktop_Interface/Makefile*
 *.user*
 Desktop_Interface/labrador
 Desktop_Interface/Labrador_resource.rc
+Desktop_Interface/android-libLabrador.so-deployment-settings.json
 Desktop_Interface/android-Labrador-deployment-settings.json
 Desktop_Interface/app_process
 Desktop_Interface/settings.ini
