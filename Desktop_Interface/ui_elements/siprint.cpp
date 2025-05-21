@@ -4,7 +4,8 @@
 siprint::siprint(const char *unitsInit, double valInit)
 : value(valInit)
 {
-    strncpy(units, unitsInit, 6);
+    units[0] = '\0';
+    strncat(units, unitsInit, sizeof units - 1);
 }
 
 char* siprint::printVal(){

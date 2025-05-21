@@ -46,28 +46,22 @@ isoDriver::isoDriver(QWidget *parent) : QLabel(parent)
 
     isoTemp = (char *) malloc(TIMER_PERIOD*ADC_SPF + 8); //8-byte header contains (unsigned long) length
 
-    char volts[2] = "V";
-    char decibel[3] = "dB";
-    char decibelmv[5] = "dBmV";
-    char seconds[2] = "s";
-    char hertz[3] = "Hz";
-
-    v0 = new siprint(volts, 0);
-    v1 = new siprint(volts, 0);
-    dv = new siprint(volts, 0);
-    db0 = new siprint(decibel, 0);
-    db1 = new siprint(decibel, 0);
-    ddb = new siprint(decibel, 0);
-    dbmv0 = new siprint(decibelmv, 0);
-    dbmv1 = new siprint(decibelmv, 0);
-    ddbmv = new siprint(decibelmv, 0);
-    t0 = new siprint(seconds, 0);
-    t1 = new siprint(seconds, 0);
-    dt = new siprint(seconds, 0);
-    f = new siprint(hertz, 0);
-    f0 = new siprint(hertz, 0);
-    f1 = new siprint(hertz, 0);
-    df = new siprint(hertz, 0);
+    v0 = new siprint("V", 0);
+    v1 = new siprint("V", 0);
+    dv = new siprint("V", 0);
+    db0 = new siprint("dB", 0);
+    db1 = new siprint("dB", 0);
+    ddb = new siprint("dB", 0);
+    dbmv0 = new siprint("dBmV", 0);
+    dbmv1 = new siprint("dBmV", 0);
+    ddbmv = new siprint("dBmV", 0);
+    t0 = new siprint("s", 0);
+    t1 = new siprint("s", 0);
+    dt = new siprint("s", 0);
+    f = new siprint("Hz", 0);
+    f0 = new siprint("Hz", 0);
+    f1 = new siprint("Hz", 0);
+    df = new siprint("Hz", 0);
 
     startTimer();
 
