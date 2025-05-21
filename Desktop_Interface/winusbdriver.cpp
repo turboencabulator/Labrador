@@ -37,7 +37,6 @@ unsigned char winUsbDriver::usbInit(unsigned long VIDin, unsigned long PIDin){
 
     unsigned char success;
     KLST_DEVINFO_HANDLE deviceInfo = NULL;
-    UINT deviceCount = 0;
     DWORD ec = ERROR_SUCCESS;
     KLST_HANDLE deviceList = NULL;
 
@@ -48,6 +47,7 @@ unsigned char winUsbDriver::usbInit(unsigned long VIDin, unsigned long PIDin){
     } //else qDebug() << "Device List initialised!";
 
     /*
+    UINT deviceCount = 0;
     LstK_Count(deviceList, &deviceCount);
     if (!deviceCount) {
         qDebug("Device list empty");
@@ -221,7 +221,6 @@ void winUsbDriver::isoTimerTick(void){
     //qDebug("\n\nThis is the %d%s Tick!", timerCount, subString);
 
     bool success;
-    DWORD errorCode = ERROR_SUCCESS;
     int n, earliest = MAX_OVERLAP;
     unsigned int minFrame = 4294967295;
     unsigned int dataBufferOffset;
@@ -269,15 +268,14 @@ void winUsbDriver::isoTimerTick(void){
     }
 
 
-    UINT oldStart;
     //Setup transfer for resubmission
     for(unsigned char k=0; k<NUM_ISO_ENDPOINTS; k++){
         //Apparently reusing before resubmitting is a bad idea???
 
-        /*oldStart = isoCtx[k][earliest]->StartFrame;
+        /*UINT oldStart = isoCtx[k][earliest]->StartFrame;
         success = IsoK_ReUse(isoCtx[k][earliest]);
         if(!success){
-            errorCode = GetLastError();
+            DWORD errorCode = GetLastError();
             qDebug() << "IsoK_Init failed with error code" << errorCode;
             qDebug() << "n =" << n;
             return;
@@ -286,7 +284,7 @@ void winUsbDriver::isoTimerTick(void){
 
         success = OvlK_ReUse(ovlkHandle[k][earliest]);
         if(!success){
-            errorCode = GetLastError();
+            DWORD errorCode = GetLastError();
             qDebug() << "OvlK_ReUse failed with error code" << errorCode;
             qDebug() << "n =" << n;
             return;
