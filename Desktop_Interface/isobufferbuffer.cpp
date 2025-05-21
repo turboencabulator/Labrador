@@ -58,7 +58,7 @@ void isoBufferBuffer::insert(std::string const & s)
 void isoBufferBuffer::insert_hex(uint8_t x)
 {
 	char str[5];
-	sprintf(str, "0x%02hhx", x);
+	snprintf(str, sizeof str, "0x%02hhx", x);
 	insert((char const *)str);
 }
 

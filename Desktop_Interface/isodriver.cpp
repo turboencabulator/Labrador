@@ -646,7 +646,6 @@ void isoDriver::updateCursors(){
 
     char temp_hori[64];
     char temp_vert[64];
-    char temp_separator[2];
 #ifndef DISABLE_SPECTRUM
     if(spectrum)
     {
@@ -656,8 +655,8 @@ void isoDriver::updateCursors(){
         f0->value = display->x0;
         f1->value = display->x1;
         df->value = fabs(display->x0 - display->x1);
-        sprintf(temp_hori, "P0 = %s,  P1 = %s,  ΔP = %s", dbmv0->printVal(), dbmv1->printVal(), ddbmv->printVal());
-        sprintf(temp_vert, "f0 = %s, f1 = %s,  Δf = %s", f0->printVal(), f1->printVal(), df->printVal());
+        snprintf(temp_hori, sizeof temp_hori, "P0 = %s, P1 = %s, ΔP = %s", dbmv0->printVal(), dbmv1->printVal(), ddbmv->printVal());
+        snprintf(temp_vert, sizeof temp_vert, "f0 = %s, f1 = %s, Δf = %s", f0->printVal(), f1->printVal(), df->printVal());
     }
     else if(freqResp)
     {
@@ -667,8 +666,8 @@ void isoDriver::updateCursors(){
         f0->value = display->x0;
         f1->value = display->x1;
         df->value = fabs(display->x0 - display->x1);
-        sprintf(temp_hori, "P0 = %s,  P1 = %s,  ΔP = %s", db0->printVal(), db1->printVal(), ddb->printVal());
-        sprintf(temp_vert, "f0 = %s, f1 = %s,  Δf = %s", f0->printVal(), f1->printVal(), df->printVal());
+        snprintf(temp_hori, sizeof temp_hori, "P0 = %s, P1 = %s, ΔP = %s", db0->printVal(), db1->printVal(), ddb->printVal());
+        snprintf(temp_vert, sizeof temp_vert, "f0 = %s, f1 = %s, Δf = %s", f0->printVal(), f1->printVal(), df->printVal());
     }
     else
 #endif
@@ -680,14 +679,12 @@ void isoDriver::updateCursors(){
         t1->value = display->x1;
         dt->value = fabs(display->x0 - display->x1);
         f->value = 1 / (display->x1 - display->x0);
-        sprintf(temp_hori, "V0 = %s,  V1 = %s,  ΔV = %s", v0->printVal(), v1->printVal(), dv->printVal());
-        sprintf(temp_vert, "t0 = %s, t1 = %s,  Δt = %s,  f = %s", t0->printVal(), t1->printVal(), dt->printVal(), f->printVal());
+        snprintf(temp_hori, sizeof temp_hori, "V0 = %s, V1 = %s, ΔV = %s", v0->printVal(), v1->printVal(), dv->printVal());
+        snprintf(temp_vert, sizeof temp_vert, "t0 = %s, t1 = %s, Δt = %s, f = %s", t0->printVal(), t1->printVal(), dt->printVal(), f->printVal());
     }
-    sprintf(temp_separator, "\n");
 
-    //sprintf(temp, "hello!");
     if(HORICURSORENABLED) cursorStatsString->append(temp_hori);
-    if(HORICURSORENABLED && VERTCURSORENABLED) cursorStatsString->append(temp_separator);
+    if(HORICURSORENABLED && VERTCURSORENABLED) cursorStatsString->append("\n");
     if(VERTCURSORENABLED) cursorStatsString->append(temp_vert);
     //qDebug() << temp;
 #if QCP_VER == 1
@@ -1058,7 +1055,7 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
 
             char tempchar[32];
             for(int i=0; i<GRAPH_SAMPLES; i++){
-                sprintf(tempchar, "%f, %f\n", x.at(i), CH1.at(i));
+                snprintf(tempchar, sizeof tempchar, "%f, %f\n", x.at(i), CH1.at(i));
                 snapshotFile_CH1->write(tempchar);
             }
             snapshotFile_CH1->close();
@@ -1079,7 +1076,7 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
 
             char tempchar[32];
             for(int i=0; i<GRAPH_SAMPLES; i++){
-                sprintf(tempchar, "%f, %f\n", x.at(i), CH2.at(i));
+                snprintf(tempchar, sizeof tempchar, "%f, %f\n", x.at(i), CH2.at(i));
                 snapshotFile_CH2->write(tempchar);
             }
             snapshotFile_CH2->close();

@@ -240,7 +240,7 @@ void isoBuffer::enableFreqResp(bool enable, double freqValue)
 void isoBuffer::outputSampleToFile(double averageSample)
 {
     char numStr[32];
-    sprintf(numStr,"%7.5f, ", averageSample);
+    snprintf(numStr, sizeof numStr, "%7.5f, ", averageSample);
 
     m_currentFile->write(numStr);
     m_currentColumn++;
@@ -296,7 +296,7 @@ void isoBuffer::enableFileIO(QFile* file, int samplesToAverage, qulonglong max_f
 
     // Add the header
     char headerLine[256];
-    sprintf(headerLine, fileHeaderFormat, samplesToAverage, m_virtualParent->driver->deviceMode);
+    snprintf(headerLine, sizeof headerLine, fileHeaderFormat, samplesToAverage, m_virtualParent->driver->deviceMode);
     m_currentFile->write(headerLine);
 
     // Set up the isoBuffer for DAQ
