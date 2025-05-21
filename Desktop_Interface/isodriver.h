@@ -204,6 +204,7 @@ private:
     double daqLoad_startTime, daqLoad_endTime;
 #ifndef DISABLE_SPECTRUM
     //Spectrum
+    int m_spectrumCounter = 0;
     AsyncDFT *m_asyncDFT;
     double m_spectrumMinX = 0;
     double m_spectrumMaxX = 375000;

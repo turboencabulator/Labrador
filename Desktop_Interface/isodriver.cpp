@@ -750,16 +750,6 @@ void isoDriver::setTriggerMode(int newMode)
 void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
 {
 #ifndef DISABLE_SPECTRUM
-    // The Spectrum is computationally expensive to calculate, so we don't want to do it on every frame
-    static int spectrumCounter = 0;
-    if(spectrum)
-    {
-        spectrumCounter = (spectrumCounter + 1) % kSpectrumCounterMax;
-
-        if (spectrumCounter != 0)
-            return;
-    }
-
     internalBuffer375_CH1->enableFreqResp(freqResp, freqValue_CH1->value());
     internalBuffer375_CH2->enableFreqResp(freqResp, freqValue_CH1->value());
 #endif
@@ -822,6 +812,11 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
 
 #ifndef DISABLE_SPECTRUM
     if (spectrum) {
+        // The spectrum is computationally expensive to calculate, so we don't want to do it on every frame
+        m_spectrumCounter = (m_spectrumCounter + 1) % kSpectrumCounterMax;
+        if (m_spectrumCounter != 0)
+            return;
+
         readData_CH1 = internalBuffer_CH1->readWindow();
         readData_CH2 = internalBuffer_CH2->readWindow();
     } else if (freqResp) {
