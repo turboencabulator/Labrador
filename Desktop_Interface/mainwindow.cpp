@@ -2129,27 +2129,24 @@ void MainWindow::on_actionExportImage_triggered()
 
 void MainWindow::on_actionSnapshot_CH1_triggered()
 {
-  qDebug() << "on_actionSnapshot_CH1_triggered()";
-  QString fileName;
-  showFileDialog(&fileName);
-  qDebug() << fileName;
-  int len = fileName.length();
+    qDebug() << "on_actionSnapshot_CH1_triggered()";
+    QString fileName;
+    showFileDialog(&fileName);
+    qDebug() << fileName;
+    if (fileName.isEmpty()) return;  // User cancelled
 
-  if(len==0) return; //User cancelled
-
-  ui->controller_iso->takeSnapshot(&fileName, 1);
+    ui->controller_iso->takeSnapshot(&fileName, 1);
 }
 
 void MainWindow::on_actionSnapshot_CH2_triggered()
 {
-  qDebug() << "on_actionSnapshot_CH2_triggered()";
-  QString fileName;
-  showFileDialog(&fileName);
-  qDebug() << fileName;
-  int len = fileName.length();
+    qDebug() << "on_actionSnapshot_CH2_triggered()";
+    QString fileName;
+    showFileDialog(&fileName);
+    qDebug() << fileName;
+    if (fileName.isEmpty()) return;  // User cancelled
 
-  if(len==0) return; //User cancelled
-  ui->controller_iso->takeSnapshot(&fileName, 2);
+    ui->controller_iso->takeSnapshot(&fileName, 2);
 }
 
 void MainWindow::on_actionRecord_CH1_triggered(bool checked)
@@ -2168,17 +2165,17 @@ void MainWindow::on_actionRecord_CH1_triggered(bool checked)
         ui->bufferDisplay->poke();
         return;
     }
+
     QString fileName;
     showFileDialog(&fileName);
     qDebug() << fileName;
-    int len = fileName.length();
-
 #ifndef PLATFORM_ANDROID
-    if(len==0){
+    if (fileName.isEmpty()) {
         ui->actionRecord_CH1->setChecked(false);
-        return; //User cancelled
+        return;  // User cancelled
     }
 #endif
+
     if(ui->controller_iso->driver->deviceMode!=6){
         output375_CH1 = new QFile(fileName);
         ui->controller_iso->internalBuffer375_CH1->enableFileIO(output375_CH1, daq_num_to_average, daq_max_file_size);
@@ -2202,14 +2199,13 @@ void MainWindow::on_actionRecord_CH2_triggered(bool checked)
     QString fileName;
     showFileDialog(&fileName);
     qDebug() << fileName;
-    int len = fileName.length();
-
 #ifndef PLATFORM_ANDROID
-    if(len==0){
+    if (fileName.isEmpty()) {
         ui->actionRecord_CH2->setChecked(false);
-        return; //User cancelled
+        return;  // User cancelled
     }
 #endif
+
     output375_CH2 = new QFile(fileName);
     ui->controller_iso->internalBuffer375_CH2->enableFileIO(output375_CH2, daq_num_to_average, daq_max_file_size);
 
@@ -2320,9 +2316,7 @@ void MainWindow::on_actionOpen_DAQ_File_triggered()
     QString fileName;
     openFileDialog(&fileName);
     qDebug() << fileName;
-    int len = fileName.length();
-
-    if(len==0) return; //User cancelled
+    if (fileName.isEmpty()) return;  // User cancelled
 
     QFile *inputFile = new QFile(fileName);
     ui->controller_iso->loadFileBuffer(inputFile);
