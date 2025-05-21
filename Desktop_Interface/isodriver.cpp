@@ -589,7 +589,7 @@ void isoDriver::cursorEnableVert(bool enabled){
     axes->graph(3)->setVisible(enabled);
 }
 
-void isoDriver::udateCursors(void){
+void isoDriver::updateCursors(){
     if(!(VERTCURSORENABLED || HORICURSORENABLED)){
 #if QCP_VER == 1
         cursorTextPtr->setVisible(0);
@@ -903,7 +903,7 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
         }
     }
 
-    udateCursors();
+    updateCursors();
 
     if (XYmode) {
         QCPCurve* curve = reinterpret_cast<QCPCurve*>(axes->plottable(0));
@@ -1128,7 +1128,7 @@ void isoDriver::multimeterAction(){
     }
     axes->graph(0)->setData(x,CH1);
 
-    udateCursors();
+    updateCursors();
 
     axes->xAxis->setRange(-display->window - display->delay, -display->delay);
     axes->yAxis->setRange(display->topRange, display->botRange);

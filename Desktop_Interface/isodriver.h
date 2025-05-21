@@ -152,7 +152,7 @@ private:
     double windowing_factor(int m_windowingType, int n_samples, int index);
 #endif
     bool properlyPaused();
-    void udateCursors(void);
+    void updateCursors();
     short reverseFrontEnd(double voltage);
     void multimeterAction();
     void broadcastStats(bool CH2);
