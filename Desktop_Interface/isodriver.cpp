@@ -1036,8 +1036,6 @@ void isoDriver::frameActionGeneric(char CH1_mode, char CH2_mode)
         axes->xAxis->setRange(-display->window - display->delay, -display->delay);
         axes->yAxis->setRange(display->topRange, display->botRange);
     }
-    axes->xAxis->setLabelColor(Qt::white);
-    axes->yAxis->setLabelColor(Qt::white);
 
     if(snapshotEnabled_CH1){
 #ifndef DISABLE_SPECTRUM

@@ -479,6 +479,8 @@ void MainWindow::initialisePlot()
     ui->scopeAxes->yAxis->setSubTickLength(4);
     ui->scopeAxes->xAxis->setTickLabelColor(Qt::white);
     ui->scopeAxes->yAxis->setTickLabelColor(Qt::white);
+    ui->scopeAxes->xAxis->setLabelColor(Qt::white);
+    ui->scopeAxes->yAxis->setLabelColor(Qt::white);
 
     ui->scopeAxes->setBackground(Qt::black);
 
