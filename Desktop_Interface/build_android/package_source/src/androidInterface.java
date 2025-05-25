@@ -4,19 +4,16 @@ import org.qtproject.qt5.android.bindings.QtApplication;
 import org.qtproject.qt5.android.bindings.QtActivity;
 
 import android.util.Log;
-import java.io.IOException;
 
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.hardware.usb.UsbDeviceConnection;
 import android.content.Context;
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.lang.String;
-import android.os.Bundle;
 
 public class androidInterface extends QtActivity
 {
