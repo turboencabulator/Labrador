@@ -516,12 +516,15 @@ void MainWindow::resizeEvent(QResizeEvent *event){
         }
     }
 
+#ifndef PLATFORM_ANDROID
     // This prevents the multimeter LCD labels from being differently-sized
-    QRect mmGeometry = ui->gridLayout->geometry();
-    int spacing = ui->gridLayout->spacing();
-    int mmHeight = mmGeometry.height();
-    mmGeometry.setHeight(mmHeight - ((mmHeight - (3 * spacing)) % 4));
+    auto mmGeometry = ui->gridLayout->geometry();
+    auto rows = ui->gridLayout->rowCount();
+    auto spacing = ui->gridLayout->verticalSpacing();
+    auto mmHeight = mmGeometry.height();
+    mmGeometry.setHeight(mmHeight - ((mmHeight - ((rows - 1) * spacing)) % rows));
     ui->gridLayout->setGeometry(mmGeometry);
+#endif
 }
 
 void MainWindow::menuSetup(){
