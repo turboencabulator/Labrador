@@ -278,7 +278,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QLabel* spectrumMinFreqLabel = new QLabel("Min Frequency");
     QLabel* spectrumMaxFreqLabel = new QLabel("Max Frequency");
     QLabel* windowingLabel = new QLabel("Window");
-    QSpacerItem* spacer = new QSpacerItem(20, 40, QSizePolicy::Expanding, QSizePolicy::Minimum);
 
     spectrumLayoutWidget->setLayout(spectrumLayout);
     spectrumMinXSpinbox->setSuffix(QString::fromUtf8("Hz"));
@@ -296,16 +295,16 @@ MainWindow::MainWindow(QWidget *parent) :
     windowingComboBox->addItem("Flat top");
     windowingComboBox->setCurrentIndex(0);
 
-    spectrumLayout->addItem(spacer);
+    spectrumLayout->addStretch();
     spectrumLayout->addWidget(spectrumMinFreqLabel);
     spectrumLayout->addWidget(spectrumMinXSpinbox);
-    spectrumLayout->addItem(spacer);
+    spectrumLayout->addStretch();
     spectrumLayout->addWidget(spectrumMaxFreqLabel);
     spectrumLayout->addWidget(spectrumMaxXSpinbox);
-    spectrumLayout->addItem(spacer);
+    spectrumLayout->addStretch();
     spectrumLayout->addWidget(windowingLabel);
     spectrumLayout->addWidget(windowingComboBox);
-    spectrumLayout->addItem(spacer);
+    spectrumLayout->addStretch();
 
     connect(spectrumMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMinSpectrum);
     connect(spectrumMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMaxSpectrum);
@@ -345,13 +344,13 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespMaxXSpinbox->setValue(32500);
     freqRespMaxXSpinbox->setSingleStep(1000);
 
-    freqRespLayout1->addItem(spacer);
+    freqRespLayout1->addStretch();
     freqRespLayout1->addWidget(freqRespMinFreqLabel);
     freqRespLayout1->addWidget(freqRespMinXSpinbox);
-    freqRespLayout1->addItem(spacer);
+    freqRespLayout1->addStretch();
     freqRespLayout1->addWidget(freqRespMaxFreqLabel);
     freqRespLayout1->addWidget(freqRespMaxXSpinbox);
-    freqRespLayout1->addItem(spacer);
+    freqRespLayout1->addStretch();
 
     freqRespLayout2Widget->setLayout(freqRespLayout2);
     freqRespStepSpinbox->setSuffix(QString::fromUtf8("Hz"));
@@ -362,17 +361,15 @@ MainWindow::MainWindow(QWidget *parent) :
     freqRespTypeComboBox->addItem("Phase");
     freqRespTypeComboBox->setCurrentIndex(0);
 
-    freqRespLayout2->addItem(spacer);
-    freqRespLayout2->addItem(spacer);
+    freqRespLayout2->addStretch();
     freqRespLayout2->addWidget(freqRespStepLabel);
     freqRespLayout2->addWidget(freqRespStepSpinbox);
-    freqRespLayout2->addItem(spacer);
+    freqRespLayout2->addStretch();
     freqRespLayout2->addWidget(freqRespTypeLabel);
     freqRespLayout2->addWidget(freqRespTypeComboBox);
-    freqRespLayout2->addItem(spacer);
+    freqRespLayout2->addStretch();
     freqRespLayout2->addWidget(freqRespRestartButton);
-    freqRespLayout2->addItem(spacer);
-    freqRespLayout2->addItem(spacer);
+    freqRespLayout2->addStretch();
 
     connect(freqRespMinXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMinFreqResp);
     connect(freqRespMaxXSpinbox, QOverload<double>::of(&espoSpinBox::valueChanged), ui->controller_iso, &isoDriver::setMaxFreqResp);
