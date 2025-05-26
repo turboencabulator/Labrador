@@ -67,7 +67,6 @@ MainWindow::MainWindow(QWidget *parent) :
 
 #ifndef DISABLE_SPECTRUM
     ui->controller_iso->freqValue_CH1 = ui->frequencyValue_CH1;
-    connect(ui->frequencyValue_CH1, SIGNAL(valueChanged(double)), this, SLOT(display(double)));
 #endif
 
     ui->timeBaseSlider->setMaximum(10*log10(MAX_WINDOW_SIZE));
