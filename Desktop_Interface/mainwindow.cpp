@@ -1456,7 +1456,7 @@ void MainWindow::readSettingsFile(){
         QApplication::processEvents();
         calibrationMessages->setStandardButtons(QMessageBox::Yes|QMessageBox::No);
         calibrationMessages->setText("No calibration data detected!\nWould you like to run calibration once connected?");
-        dt_userWantsToCalibrate = calibrationMessages->exec();
+        dt_userWantsToCalibrate = calibrationMessages->exec() == QMessageBox::Yes;
         qDebug() << "dt_userWantsToCalibrate" << dt_userWantsToCalibrate;
         dt_AlreadyAskedAboutCalibration = true;
     }
@@ -1524,7 +1524,7 @@ void MainWindow::reinitUsbStage2(void){
 
     readSettingsFile();
 
-    ui->controller_iso->driver->calibrateOnConnect = (dt_userWantsToCalibrate == 16384); //Yes/No are 16384/65536 for some reason.  I think 0/1 are reserved for OK/Cancel.
+    ui->controller_iso->driver->calibrateOnConnect = dt_userWantsToCalibrate;
     connect(ui->controller_iso->driver, SIGNAL(calibrateMe()), this, SLOT(on_actionCalibrate_triggered()));
     qDebug() << "ReinitUsbStage2 is returning";
 }

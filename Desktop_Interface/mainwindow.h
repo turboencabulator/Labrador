@@ -324,7 +324,7 @@ private:
 
     //Duct Tape
     bool dt_AlreadyAskedAboutCalibration = false;
-    int dt_userWantsToCalibrate;
+    bool dt_userWantsToCalibrate = false;
     int daq_num_to_average;
     qulonglong daq_max_file_size;
 
