@@ -4031,22 +4031,6 @@
    <sender>lockPsuCheckBox</sender>
    <signal>toggled(bool)</signal>
    <receiver>lockPsuCheckBox</receiver>
-   <slot>resetTimer(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>1115</x>
-     <y>345</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>1115</x>
-     <y>345</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>lockPsuCheckBox</sender>
-   <signal>toggled(bool)</signal>
-   <receiver>lockPsuCheckBox</receiver>
    <slot>resetTimer()</slot>
    <hints>
     <hint type="sourcelabel">
