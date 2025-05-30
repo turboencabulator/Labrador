@@ -107,7 +107,6 @@ protected:
     virtual unsigned char usbInit(unsigned long VIDin, unsigned long PIDin) = 0;
     virtual int usbIsoInit(void) = 0;
     virtual int flashFirmware(void) = 0;
-    uint8_t numero_uno = 1;
     QMessageBox *messageBox;
 signals:
     void sendClearBuffer(bool ch3751, bool ch3752, bool ch750);

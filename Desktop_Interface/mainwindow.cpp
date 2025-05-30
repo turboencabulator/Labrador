@@ -1392,10 +1392,6 @@ void MainWindow::on_actionEnter_Manually_triggered()
     dialog.exec();
 }
 
-void MainWindow::helloWorld(){
-    qDebug() << "Hello World!";
-}
-
 #define QSETTINGS_DEFAULT_RETURN 42069
 void MainWindow::readSettingsFile(){
     settings = new QSettings();

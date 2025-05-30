@@ -105,7 +105,6 @@ private slots:
     //Deprecated/Unsupported
     void timeBaseNeedsChanging(bool positive);
     void on_actionForce_Square_triggered(bool checked);
-    void helloWorld();
 
     //Keyboard Shortcuts
     void arrowUpTriggered();
