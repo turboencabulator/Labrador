@@ -1480,11 +1480,11 @@ void MainWindow::reinitUsbStage2(void){
     delete(ui->controller_iso->driver);
     qDebug() << "Reinitialising USB driver!";
 #if defined(PLATFORM_WINDOWS)
-    ui->controller_iso->driver = new winUsbDriver();
+    ui->controller_iso->setDriver(new winUsbDriver());
 #elif defined(PLATFORM_ANDROID)
-    ui->controller_iso->driver = new androidUsbDriver();
+    ui->controller_iso->setDriver(new androidUsbDriver());
 #else
-    ui->controller_iso->driver = new unixUsbDriver();
+    ui->controller_iso->setDriver(new unixUsbDriver());
 #endif
 
     //Reconnect the other objects.
