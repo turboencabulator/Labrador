@@ -451,7 +451,6 @@ void genericUsbDriver::checkConnection(){
         qDebug() << "CHECKING CONNECTION!";
         initReturnValue = usbInit(BOARD_VID, BOARD_PID);
         connected = !(initReturnValue);
-        qDebug() << "Connected";
 
         if(E_BOARD_IN_BOOTLOADER == initReturnValue) {
             qDebug() << "Board found in bootloader mode!!";
