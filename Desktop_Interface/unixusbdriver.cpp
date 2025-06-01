@@ -325,7 +325,7 @@ bool unixUsbDriver::allEndpointsComplete(int n){
 
 void unixUsbDriver::shutdownProcedure(){
     shutdownMode = true;
-    QTimer::singleShot(100, this, SLOT(backupCleanup()));
+    QTimer::singleShot(500, this, SLOT(backupCleanup()));
 }
 
 //On physical disconnect, isoTimerTick will not assert stopTime.  Hence this duct-tape function.
