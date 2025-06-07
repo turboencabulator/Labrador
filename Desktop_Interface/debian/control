@@ -1,12 +1,19 @@
-Package: espotek-labrador
-Version: 2.0
+Source: espotek-labrador
 Section: electronics
 Priority: optional
-Architecture: amd64
-Depends: libusb-1.0-0 (>= 1.0.19)
 Maintainer: Chris Esposito <admin@espotek.com>
+Build-Depends: debhelper-compat (= 13), libeigen3-dev, libfftw3-dev, libusb-1.0-0-dev, qt5-qmake, qtbase5-dev, qtbase5-dev-tools, qtchooser
 Homepage: https://espotek.com
-Description: EspoTek Labrador
- This package is designed to install the EspoTek Labrador software on 64-bit Ubuntu 18.04 and later (including Kubuntu, Lubuntu etc.).
+Rules-Requires-Root: binary-targets
+Vcs-Git: https://github.com/espotek-org/Labrador.git [Desktop_Interface]
+
+Package: espotek-labrador
+Architecture: i386 amd64 armhf arm64
+Depends: ${misc:Depends}, ${shlibs:Depends}
+Description: driver and GUI for EspoTek Labrador
+ The EspoTek Labrador is an open-source board that turns your PC, Raspberry
+ Pi, or Android Smartphone into a full-featured electronics lab bench,
+ complete with oscilloscope, signal generator, and more.
  .
- If you use another version of Linux, or are having issues with this package, I recommend either using the .AppImage, or installing through "make install" (see https://github.com/espotek-org/labrador for instructions on how to do this)
+ This package contains the driver, along with a GUI to control the board and
+ to display captured data.

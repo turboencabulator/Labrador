@@ -57,7 +57,15 @@ jobs:
           if-no-files-found: error
 
   build-deb:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            arch: amd64
+          - os: ubuntu-24.04-arm
+            arch: arm64
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -66,7 +74,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y software-properties-common
-          sudo apt-get install -y build-essential libfftw3-dev qtbase5-dev libusb-1.0-0-dev libeigen3-dev
+          sudo apt-get install -y build-essential debhelper libfftw3-dev qtbase5-dev libusb-1.0-0-dev libeigen3-dev
 
       - name: Build librador
         working-directory: Librador_API/___librador/librador
@@ -89,12 +97,13 @@ jobs:
       - name: Build Debian package
         working-directory: Desktop_Interface
         run: |
-          ./make_deb
+          DEB_BUILD_OPTIONS=nostrip dpkg-buildpackage -b
+          mv ../espotek-labrador*.deb ../Labrador-$(git rev-parse --short HEAD)-${{ matrix.arch }}.deb
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: asset-deb
-          path: Desktop_Interface/Labrador*.deb
+          name: asset-deb-${{ matrix.arch }}
+          path: Labrador*.deb
           compression-level: 0
           if-no-files-found: error
