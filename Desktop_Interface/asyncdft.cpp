@@ -7,7 +7,7 @@ AsyncDFT::AsyncDFT()
 {
     /*FFTW3 inits*/
     fftw_init_threads();
-    fftw_plan_with_nthreads(omp_get_max_threads() * 2);
+    fftw_plan_with_nthreads(/*omp_get_max_threads() * */2);
     out_buffer = fftw_alloc_complex(n_samples);
     plan = fftw_plan_dft_r2c_1d(n_samples,in_buffer, out_buffer,0);
 }
