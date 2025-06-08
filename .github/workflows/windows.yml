@@ -45,6 +45,7 @@ jobs:
       - name: Build librador
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/librador
+        shell: msys2 {0}
         run: |
           qmake -config release
           make
@@ -52,6 +53,7 @@ jobs:
       - name: Build librademo
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/librademo
+        shell: msys2 {0}
         run: |
           qmake -config release
           make
@@ -59,13 +61,14 @@ jobs:
       - name: Build basicdemo
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/basicdemo
+        shell: msys2 {0}
         run: |
           qmake -config release
           make
 
       - name: Build Labrador
         working-directory: Desktop_Interface
-        shell: cmd
+        shell: msys2 {0}
         run: |
           qmake -config release INCLUDEPATH+="C:\ProgramData\chocolatey\lib\eigen\include\eigen3"
           make
