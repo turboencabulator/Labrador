@@ -42,6 +42,11 @@ jobs:
           target: 'desktop'
           arch: '${{ matrix.qt_arch }}'
 
+      - name: Debug
+        shell: msys2 {0}
+        run: |
+          env
+
       - name: Build librador
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/librador
