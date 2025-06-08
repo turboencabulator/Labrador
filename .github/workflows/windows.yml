@@ -78,7 +78,7 @@ jobs:
           qmake -config release INCLUDEPATH+="C:\ProgramData\chocolatey\lib\eigen\include\eigen3"
           make
           make INSTALL_ROOT=bin install
-          windeployqt bin\Labrador.exe
+          windeployqt bin/Labrador.exe
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
