@@ -48,7 +48,8 @@ jobs:
 
       - name: Debug
         run: |
-          env
+          env | sort
+          which g++
 
       - name: Build librador
         if: matrix.platform == 'x64'
