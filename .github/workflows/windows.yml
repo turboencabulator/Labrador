@@ -11,15 +11,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - qt_arch: 'win64_msvc2019_64'
-            platform: 'x64'
-            output_bin_dir: 'bin64'
-          - qt_arch: 'win32_msvc2019'
-            platform: 'x86'
-            output_bin_dir: 'bin32'
+          - sys: MINGW64
+            qt_arch: win64_mingw81
+            platform: x64
+            output_bin_dir: bin64
+          - sys: MINGW32
+            qt_arch: win32_mingw81
+            platform: x86
+            output_bin_dir: bin32
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.sys }}
 
       - name: Install eigen
         shell: cmd
@@ -34,11 +41,6 @@ jobs:
           host: 'windows'
           target: 'desktop'
           arch: '${{ matrix.qt_arch }}'
-
-      - name: Setup MSVC Developer Command Prompt
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{ matrix.platform }}
 
       - name: Build librador
         if: matrix.platform == 'x64'
