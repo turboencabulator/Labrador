@@ -19,6 +19,9 @@ jobs:
             qt_arch: win32_mingw81
             platform: x86
             output_bin_dir: bin32
+    defaults:
+      run:
+        shell: msys2 {0}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -43,14 +46,12 @@ jobs:
           arch: '${{ matrix.qt_arch }}'
 
       - name: Debug
-        shell: msys2 {0}
         run: |
           env
 
       - name: Build librador
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/librador
-        shell: msys2 {0}
         run: |
           qmake -config release
           make
@@ -58,7 +59,6 @@ jobs:
       - name: Build librademo
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/librademo
-        shell: msys2 {0}
         run: |
           qmake -config release
           make
@@ -66,14 +66,12 @@ jobs:
       - name: Build basicdemo
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/basicdemo
-        shell: msys2 {0}
         run: |
           qmake -config release
           make
 
       - name: Build Labrador
         working-directory: Desktop_Interface
-        shell: msys2 {0}
         run: |
           qmake -config release INCLUDEPATH+="C:\ProgramData\chocolatey\lib\eigen\include\eigen3"
           make
