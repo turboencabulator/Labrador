@@ -47,29 +47,29 @@ jobs:
         working-directory: Librador_API/___librador/librador
         run: |
           qmake -config release
-          nmake
+          make
 
       - name: Build librademo
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/librademo
         run: |
           qmake -config release
-          nmake
+          make
 
       - name: Build basicdemo
         if: matrix.platform == 'x64'
         working-directory: Librador_API/___librador/basicdemo
         run: |
           qmake -config release
-          nmake
+          make
 
       - name: Build Labrador
         working-directory: Desktop_Interface
         shell: cmd
         run: |
           qmake -config release INCLUDEPATH+="C:\ProgramData\chocolatey\lib\eigen\include\eigen3"
-          nmake
-          nmake INSTALL_ROOT=bin install
+          make
+          make INSTALL_ROOT=bin install
           windeployqt bin\Labrador.exe
 
       - name: Upload artifacts
